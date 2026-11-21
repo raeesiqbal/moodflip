@@ -20,7 +20,7 @@ export default defineConfig({
         "sb_publishable_rtuxfFYFRZ5F_eXPuXBk4Q_8COmKHwD",
       ),
       NEXT_PUBLIC_SITE_URL: bindings.text(
-        "https://moodflip.joykonta.workers.dev/",
+        "https://moodflip.joykonta.workers.dev",
       ),
 
       CONTACT_FROM_EMAIL: bindings.text("MoodFlip <onboarding@resend.dev>"),
