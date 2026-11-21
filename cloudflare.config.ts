@@ -29,10 +29,7 @@ export default defineConfig({
       ),
 
       SUPABASE_SERVICE_ROLE_KEY: bindings.secret(),
-      MISTRAL_API_KEY: bindings.secret(),
       RESEND_API_KEY: bindings.secret(),
-      CRON_SECRET: bindings.secret(),
     },
   }),
 });
- 
