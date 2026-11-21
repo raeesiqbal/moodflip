@@ -1,0 +1,56 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# debug & logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# local tool & IDE artifacts
+.playwright-mcp/
+.cursor/
+.agents/
+moodflip_exact_clone.html
+
+# Google OAuth client secret
+client_secret_*.json
+
+# Google Sheets live sync cached data (contains live sheet data, not needed in git)
+scripts/pairings_live.json
+scripts/rotating_live.json
+scripts/sheet_data.xlsx
+scripts/doc_*
+scripts/section23*
+.env*
+!.env.example
+.registered_users.json
+
+# local archive; keep it outside GitHub and deployment uploads
+/Backup file/
+/dist/
+.vinext/
+.cloudflare/

@@ -1,0 +1,822 @@
+/* MoodFlip Clean & Unified Homepage Styles */
+
+.homeContainer {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 20px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+/* Phones and tablets must be able to reach the action, advertising space and
+   footer smoothly without any truncation. */
+@media (max-width: 1023px) {
+  .homeContainer {
+    padding-bottom: 24px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+/* Section 1: How MoodFlip Works (5-Step Flow) */
+.howSection {
+  width: 100%;
+  background: #FEF9F5;
+  border: 1px solid #E4DAD7;
+  border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(26, 20, 63, 0.03), 0 2px 8px rgba(0, 0, 0, 0.01);
+  padding: 36px 40px 42px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.sectionHeader {
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sectionHeader h2 {
+  font-family: var(--font-serif, 'Fraunces', Georgia, serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: #1A143F;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.sectionHeader p {
+  font-size: 15px;
+  font-weight: 500;
+  color: #5C527A;
+  margin: 0;
+}
+
+.stepsGrid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.stepItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  min-width: 0;
+}
+
+.stepIconBadge {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 1.5px solid #E4DAD7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(26, 20, 63, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stepItem:hover .stepIconBadge {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 22px rgba(116, 100, 172, 0.15);
+  border-color: #7666AB;
+}
+
+.stepContentWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stepHeaderRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stepNumber {
+  font-family: var(--font-serif, 'Fraunces', Georgia, serif);
+  font-size: 26px;
+  font-weight: 800;
+  color: #1A143F;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stepTitle {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1A143F;
+  margin: 0 0 4px 0;
+  line-height: 1.25;
+}
+
+.stepDesc {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #5C527A;
+  margin: 0;
+  line-height: 1.4;
+  max-width: 160px;
+}
+
+.stepConnector {
+  position: absolute;
+  top: 36px;
+  right: -24px;
+  width: 36px;
+  height: 2px;
+  background-image: repeating-linear-gradient(90deg, #A49BA8 0 4px, transparent 4px 8px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.stepConnector::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-top: 1.5px solid #A49BA8;
+  border-right: 1.5px solid #A49BA8;
+  transform: rotate(45deg);
+}
+
+/* Section 2: 7-Day Plan Promo Card */
+.planSection {
+  width: 100%;
+  background: #FCF3E9;
+  border: 1px solid #E4DAD7;
+  border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(26, 20, 63, 0.03), 0 2px 8px rgba(0, 0, 0, 0.01);
+  padding: 36px 44px;
+  display: grid;
+  grid-template-columns: 280px 1fr 270px;
+  gap: 36px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.bookWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bookImg {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 28px rgba(78, 54, 118, 0.18));
+  transition: transform 0.3s ease;
+}
+
+.bookImg:hover {
+  transform: translateY(-4px) scale(1.03);
+}
+
+.planContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.planContent h2 {
+  font-family: var(--font-serif, 'Fraunces', Georgia, serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: #1A143F;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.planContent > p {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #5C527A;
+  margin: 0 0 12px 0;
+}
+
+.planChecklist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1A143F;
+}
+
+.checkCircle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid #7666AB;
+  background: #EEE0FC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4F438B;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.priceCard {
+  background: #FEF9F5;
+  border: 1px solid #E4DAD7;
+  border-radius: 22px;
+  padding: 26px 22px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(26, 20, 63, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.priceCardTitle {
+  font-family: var(--font-serif, 'Fraunces', Georgia, serif);
+  font-size: 19px;
+  font-weight: 700;
+  color: #1A143F;
+  margin: 0;
+}
+
+.priceCardSubtitle {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #5C527A;
+  margin: 0 0 8px 0;
+}
+
+.priceAmount {
+  font-family: var(--font-serif, 'Fraunces', Georgia, serif);
+  font-size: 42px;
+  font-weight: 800;
+  color: #1A143F;
+  line-height: 1;
+  margin: 4px 0 2px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.priceCurrency {
+  font-size: 22px;
+  margin-right: 2px;
+  margin-top: 4px;
+}
+
+.priceNote {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #7E7096;
+  margin-bottom: 14px;
+}
+
+.planCtaButton {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7464AC 0%, #4F438B 100%);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(79, 67, 139, 0.28);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.planCtaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(79, 67, 139, 0.38);
+  opacity: 0.96;
+}
+
+.secureText {
+  font-size: 11px;
+  font-weight: 500;
+  color: #A49BA8;
+  margin-top: 8px;
+}
+
+/* Section 3: Explore Your Feelings / Mood Library */
+.librarySection {
+  width: 100%;
+  background: #FEF9F5;
+  border: 1px solid #E4DAD7;
+  border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(26, 20, 63, 0.03), 0 2px 8px rgba(0, 0, 0, 0.01);
+  padding: 36px 40px 40px 40px;
+  text-align: center;
+}
+
+.libraryGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.moodCard {
+  border: 1px solid #E4DAD7;
+  border-radius: 16px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(26, 20, 63, 0.02);
+}
+
+.moodCard:hover {
+  transform: translateY(-3px);
+  border-color: #7666AB;
+  box-shadow: 0 8px 20px rgba(116, 100, 172, 0.12);
+}
+
+.moodCardIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  font-size: 20px;
+}
+
+.moodCardTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1A143F;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.moodCardSub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #5C527A;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.moodCardLink {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7464AC;
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.allMoodsBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 32px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #7464AC 0%, #4F438B 100%);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(79, 67, 139, 0.28);
+  transition: all 0.2s ease;
+}
+
+.allMoodsBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(79, 67, 139, 0.38);
+  opacity: 0.96;
+}
+
+/* Section 4: About MoodFlip */
+.aboutSection {
+  width: 100%;
+  background: #FEF9F5;
+  border: 1px solid #E4DAD7;
+  border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(26, 20, 63, 0.03), 0 2px 8px rgba(0, 0, 0, 0.01);
+  padding: 36px 44px;
+  display: grid;
+  grid-template-columns: 240px 1fr 300px;
+  gap: 36px;
+  align-items: center;
+}
+
+.aboutIllustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aboutImg {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  object-fit: contain;
+}
+
+.aboutContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aboutContent h2 {
+  font-family: var(--font-serif, 'Fraunces', Georgia, serif);
+  font-size: 30px;
+  font-weight: 700;
+  color: #1A143F;
+  margin: 0;
+}
+
+.aboutContent p {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #5C527A;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.emergencyNotice {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #7464AC;
+  margin-top: 4px !important;
+}
+
+.aboutFeaturesCard {
+  background: #FEF9F5;
+  border: 1px solid #E4DAD7;
+  border-radius: 20px;
+  padding: 20px 22px;
+  box-shadow: 0 6px 20px rgba(26, 20, 63, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.featurePoint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1A143F;
+}
+
+.featureIconWrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #F4EBF5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Responsive Rules */
+@media (max-width: 1080px) {
+  .stepsGrid {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .stepConnector {
+    display: none;
+  }
+
+  .stepItem {
+    flex: 0 0 calc(33.333% - 14px);
+  }
+
+  .libraryGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .planSection {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bookWrap {
+    grid-column: span 2;
+  }
+
+  .aboutSection {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .aboutContent {
+    align-items: center;
+  }
+
+  .aboutFeaturesCard {
+    max-width: 380px;
+    margin: 0 auto;
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 768px) {
+  .homeContainer {
+    padding: 0 12px 100px 12px;
+    gap: 20px;
+  }
+
+  .howSection,
+  .planSection,
+  .librarySection,
+  .aboutSection {
+    padding: 24px 16px;
+    border-radius: 20px;
+  }
+
+  .sectionHeader h2,
+  .planContent h2,
+  .aboutContent h2 {
+    font-size: 23px;
+  }
+
+  .sectionHeader p {
+    font-size: 13.5px;
+  }
+
+  .stepsGrid {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .stepItem {
+    flex: 1 1 100%;
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    gap: 14px;
+    padding: 14px 16px;
+    background: #FEF9F5;
+    border: 1px solid #E4DAD7;
+    border-radius: 18px;
+    box-shadow: 0 4px 12px rgba(26, 20, 63, 0.02);
+  }
+
+  .stepIconBadge {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .stepContentWrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 3px;
+  }
+
+  .stepHeaderRow {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .stepNumber {
+    font-size: 19px;
+    font-weight: 800;
+    color: #4F438B;
+    margin-bottom: 0;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .stepTitle {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1A143F;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .stepDesc {
+    font-size: 13px;
+    font-weight: 500;
+    color: #5C527A;
+    line-height: 1.4;
+    max-width: none;
+    margin: 0;
+  }
+
+  .planSection {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 20px;
+    padding: 24px 16px;
+  }
+
+  .bookWrap {
+    grid-column: span 1;
+  }
+
+  .bookImg {
+    max-width: 190px;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  .planContent {
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+  }
+
+  .planContent h2 {
+    font-size: 23px;
+    line-height: 1.25;
+  }
+
+  .planContent > p {
+    font-size: 13.5px;
+    margin-bottom: 10px;
+  }
+
+  .planChecklist {
+    text-align: left;
+    width: 100%;
+    max-width: 310px;
+    margin: 0 auto;
+    gap: 10px;
+  }
+
+  .checkItem {
+    font-size: 13.5px;
+    gap: 10px;
+  }
+
+  .priceCard {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .priceCardTitle {
+    font-size: 18px;
+  }
+
+  .priceAmount {
+    font-size: 38px;
+  }
+
+  .planCtaButton {
+    height: 48px;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .libraryGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .moodCard {
+    padding: 14px 10px;
+    border-radius: 16px;
+    min-height: 120px;
+  }
+
+  .moodCardIcon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .moodCardTitle {
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+
+  .moodCardSub {
+    font-size: 11.5px;
+    line-height: 1.3;
+  }
+
+  .moodCardLink {
+    font-size: 11.5px;
+    font-weight: 800;
+    margin-top: 6px;
+  }
+
+  .allMoodsBtn {
+    height: 46px;
+    font-size: 14px;
+    font-weight: 800;
+    max-width: 220px;
+    margin: 16px auto 0 auto;
+  }
+
+  .aboutSection {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    text-align: center;
+    padding: 24px 16px;
+  }
+
+  .aboutImg {
+    max-width: 170px;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  .aboutContent {
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .aboutContent h2 {
+    font-size: 23px;
+  }
+
+  .aboutContent p {
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .aboutFeaturesCard {
+    padding: 16px;
+    border-radius: 18px;
+    gap: 10px;
+    width: 100%;
+    max-width: 330px;
+    margin: 0 auto;
+    text-align: left;
+  }
+
+  .featurePoint {
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .featureIconWrap {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+  }
+}

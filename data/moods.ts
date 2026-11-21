@@ -1,0 +1,838 @@
+export type MoodCategory = 'All' | 'Low' | 'Anxious' | 'Angry' | 'Overwhelmed' | 'Lonely';
+
+export type CounselorPromptItem = {
+  serial: number;
+  id: string;
+  name: string;
+  emoji: string;
+  category: MoodCategory;
+  bgColor: string;
+  textColor: string;
+  feelings: string[];
+  target: string;
+  actionTitle: string;
+  actionDesc: string;
+  whyHelps: string;
+  actions: string[];
+  reframeQuote: string;
+  column1Notes?: string;
+  iconUrl?: string;
+};
+
+export const COUNSELOR_MOODS: CounselorPromptItem[] = [
+  {
+    // Serial 1 — synced from Google Sheets (Joy ChatGPT 2026 Review: 6 changes)
+    serial: 1,
+    id: "scared",
+    name: "Scared",
+    emoji: "😨",
+    category: "Anxious",
+    bgColor: "#FEF3C7",
+    textColor: "#D97706",
+    feelings: ["Fearful", "Terrified", "Panicked", "Uneasy"],
+    target: "Safe / Peaceful",
+    actionTitle: "Ground Your Feet & Name 5 Things",
+    actionDesc: "Put both feet on the floor. Look around and name 5 things you can see. Say: \"I am here, and I can choose one safe next step.\"",
+    whyHelps: "Physical grounding shifts your focus from perceived threat to current physical reality.",
+    actions: [
+      "Put both feet on the floor. Look around and name 5 things you can see. Say: \"I am here, and I can choose one safe next step.\"",
+      "Place one hand on your heart and one on your belly. Take 5 slow breaths and soften your shoulders.",
+      "Find 3 solid objects near you. Touch one and describe its texture, temperature and shape out loud.",
+      "Unclench your jaw, drop your shoulders, and slowly turn your head left and right. Notice what is actually around you right now.",
+      "Press your feet into the ground for 10 seconds, release for 5 seconds, and repeat 4 times.",
+      "Take one tiny protective action: close a door, move to a quieter spot, turn on a light, or sit with your back supported.",
+      "Count backwards slowly from 20. As you count, keep your eyes on one steady object in the room.",
+      "Name the difference between \"then\" and \"now\": say the date, where you are, and one thing you can do next.",
+      "Hug yourself for 30 seconds. Then release slowly and notice the support under your feet or body.",
+      "Choose one calm or neutral colour in the room. Rest your eyes on it and breathe slowly for 60 seconds."
+    ],
+    reframeQuote: "Put both feet on the floor.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 2 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 2,
+    id: "anxious",
+    name: "Anxious",
+    emoji: "🌀",
+    category: "Anxious",
+    bgColor: "#E0F2FE",
+    textColor: "#0284C7",
+    feelings: ["Nervous", "Uneasy", "Worried", "Restless", "On edge"],
+    target: "Peaceful",
+    actionTitle: "Box Breathing Reset",
+    actionDesc: "Breathe in for 4 and out for 6. Repeat 6 times. Make the exhale longer than the inhale.",
+    whyHelps: "Box breathing regulates your autonomic nervous system and slows down rapid heart rate.",
+    actions: [
+      "Breathe in for 4 and out for 6. Repeat 6 times. Make the exhale longer than the inhale.",
+      "Write the worry in 7 words or less. Then write one tiny next action beside it.",
+      "Put a timer on for 60 seconds and only notice your feet, hands and breath. No solving.",
+      "Ask: \"Is this a problem for this minute, or for later?\" Put later problems aside for now.",
+      "In 60 seconds, name 3 things you can control today. Let the rest wait for now.",
+      "Slowly sip water and feel each swallow. For 60 seconds, focus only on the physical sensation of drinking, letting your body know there is no emergency right now.",
+      "Open your hands, palms up. Say: \"I can handle the next step.\"",
+      "Walk slowly for 60 seconds and count each step from 1 to 30, then back down.",
+      "Do a quick body scan from forehead to toes and relax one body part at a time.",
+      "Look at one object and describe it in detail like a scientist for 60 seconds."
+    ],
+    reframeQuote: "Breathe in for 4 and out for 6.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 3 — synced from Google Sheets (Joy ChatGPT 2026 Review: 1 changes)
+    serial: 3,
+    id: "insecure",
+    name: "Insecure",
+    emoji: "🛡️",
+    category: "Anxious",
+    bgColor: "#FFF7EB",
+    textColor: "#D97706",
+    feelings: ["Doubtful", "Exposed", "Uncertain", "Inadequate"],
+    target: "Confident",
+    actionTitle: "Posture Shift & Past Victories",
+    actionDesc: "Sit or stand taller. Name 3 things you have handled before, even if they were hard.",
+    whyHelps: "Upright posture combined with evidence of past resilience lowers stress hormones.",
+    actions: [
+      "Sit or stand taller. Name 3 things you have handled before, even if they were hard.",
+      "Put one hand on your heart and say: \"I am allowed to be here.\" Repeat 5 times.",
+      "Remember one compliment you once received. Let yourself accept it for 60 seconds.",
+      "Choose one posture of confidence: shoulders back, chin level, feet steady. Hold it for 60 seconds.",
+      "Say one of your strengths out loud, even if it feels small. Example: \"I'm a great cook\" or \"I'm very good at writing.\"",
+      "Ask: \"What would I do if I trusted myself 5% more?\" Pick that tiny action.",
+      "Stop comparing for 60 seconds. Say: \"Their path is theirs. My path is mine.\"",
+      "Think of a younger version of yourself. Tell them one kind sentence.",
+      "Take one small visible action: tidy one thing, send one message, or decide one next step.",
+      "Smile gently, breathe slowly, and say: \"I do not need to be perfect to begin.\""
+    ],
+    reframeQuote: "Sit or stand taller.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 4 — synced from Google Sheets (Joy ChatGPT 2026 Review: 3 changes)
+    serial: 4,
+    id: "weak",
+    name: "Weak",
+    emoji: "🥀",
+    category: "Low",
+    bgColor: "#F3F4F6",
+    textColor: "#4B5563",
+    feelings: ["Powerless", "Fragile", "Helpless", "Exhausted"],
+    target: "Powerful",
+    actionTitle: "Firm Grounding & Micro-Control",
+    actionDesc: "Place your feet firmly on the floor and ask: \"What is one thing I can control in the next 10 minutes?\"",
+    whyHelps: "Refocusing on tiny actionable choices restores feeling of personal agency.",
+    actions: [
+      "Place your feet firmly on the floor and ask: \"What is one thing I can control in the next 10 minutes?\"",
+      "Make fists for 5 seconds, release for 5 seconds, and repeat 6 times.",
+      "\"Stand up. Lengthen your spine, roll your shoulders back once, and hold a steady posture for 60 seconds while taking 5 slow, powerful breaths.\"",
+      "Choose one boundary sentence: \"No\", \"Not now\", or \"I need time.\" Say it out loud.",
+      "Stand facing a wall. Press both hands into the wall 10 times. Notice that your body has strength.",
+      "Put your hand on your lower belly and say: \"My power can be quiet.\"",
+      "Do 10 slow wall pushes. Feel strength without forcing anything.",
+      "Name one decision you are allowed to make today.",
+      "Take one step forward physically and say: \"I can move.\"",
+      "Write or say: \"I have handled hard things before.\" Say it once or twice and notice what part of it you can believe today."
+    ],
+    reframeQuote: "Place your feet firmly on the floor and ask: \"What is one thing I can control in the next 10 minutes?\".",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 5 — synced from Google Sheets (Joy ChatGPT 2026 Review: 1 changes)
+    serial: 5,
+    id: "rejected",
+    name: "Rejected",
+    emoji: "💔",
+    category: "Lonely",
+    bgColor: "#FFF0F3",
+    textColor: "#E11D48",
+    feelings: ["Let down", "Unwanted", "Excluded", "Hurt"],
+    target: "Accepted",
+    actionTitle: "Heart Touch & Self-Worth",
+    actionDesc: "Place one hand on your chest. Say: \"One person's response is not my worth.\"",
+    whyHelps: "Self-directed touch releases oxytocin and soothes emotional sting.",
+    actions: [
+      "Place one hand on your chest. Say: \"One person's response is not my worth.\"",
+      "Think of one person, pet or place where you are welcome. Hold that image for 60 seconds.",
+      "Send a kind, low-pressure message to someone safe, or draft it without sending.",
+      "Say: \"This hurt, but it does not define me.\" Breathe slowly 5 times.",
+      "Look in the mirror or phone camera and say: \"I am worthy of care and respect.\"",
+      "Name 3 qualities you still have even after this rejection.",
+      "Put your hand over your heart and imagine giving yourself the acceptance you wanted from them.",
+      "Step away from checking messages or reactions for 60 seconds. Return to yourself.",
+      "Ask: \"Where am I still wanted?\" Name one answer.",
+      "Do one caring action for yourself: water, blanket, fresh air, or a kinder thought."
+    ],
+    reframeQuote: "Place one hand on your chest.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 6 — synced from Google Sheets (Joy ChatGPT 2026 Review: 6 changes)
+    serial: 6,
+    id: "threatened",
+    name: "Threatened",
+    emoji: "⚠️",
+    category: "Anxious",
+    bgColor: "#FEF2F2",
+    textColor: "#DC2626",
+    feelings: ["Vulnerable", "Unsafe", "Guarded", "On defense"],
+    target: "Safe / Trusting",
+    actionTitle: "Body Release & Safe Presence",
+    actionDesc: "Pause and ask: \"Am I in immediate danger right now?\" If yes, move toward safety or contact help. If you`re not in immediate danger, relax your jaw and shoulders. Ask: \"Is this danger happening now, or is my body remembering danger?\"",
+    whyHelps: "Releasing jaw and shoulder muscular tension signals safety to the amygdala.",
+    actions: [
+      "Pause and ask: \"Am I in immediate danger right now?\" If yes, move toward safety or contact help. If you`re not in immediate danger, relax your jaw and shoulders. Ask: \"Is this danger happening now, or is my body remembering danger?\"",
+      "Move to a position that feels more secure: closer to an exit, with space around you, your phone nearby, or near someone you trust.",
+      "Name 5 neutral facts about the room. Keep opinions out of it.",
+      "Look slowly around the room from left to right and name 5 neutral things you can see.",
+      "Say: \"I can pause before I react.\" Put both of your feet on the floor and notice the support underneath you.",
+      "Create a tiny boundary: step back, lower your voice, close a tab, or mute a notification.",
+      "Press your thumb and finger together. Use it as a signal: \"I am here now.\"",
+      "Ask: \"What is the safest next small move?\" Do only that.",
+      "Take a seat. Shake out your hands for 20 seconds, then press your feet into the floor and release slowly 3 times while you slow down your breath.",
+      "Look at the exit, then at your feet. Ask: \"What would help me feel more secure in the next minute?\""
+    ],
+    reframeQuote: "Pause and ask: \"Am I in immediate danger right now?\" If yes, move toward safety or contact help.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 7 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 7,
+    id: "let-down",
+    name: "Let down",
+    emoji: "🌧️",
+    category: "Low",
+    bgColor: "#EEF2FF",
+    textColor: "#4F46E5",
+    feelings: ["Disappointed", "Discouraged", "Unseen", "Sad"],
+    target: "Hopeful",
+    actionTitle: "Acknowledge & Open Next Door",
+    actionDesc: "Say: \"This disappointed me, but it does not close every door.\" Name one next option.",
+    whyHelps: "Validating emotion without fixing creates mental room for new possibilities.",
+    actions: [
+      "Say: \"This disappointed me, but it does not close every door.\" Name one next option.",
+      "Put your hand on your heart and admit the truth: \"I wanted this to be different.\"",
+      "Write one sentence: \"What I needed was…\" Then take one breath.",
+      "Say: \"I feel disappointed, but my options are broader.\" Name one person, choice, or next step that is still available to you.",
+      "Release your shoulders, inhale deeply and exhale with a loud sigh. Repeat this 5 times, then let your arms hang loose for 20 seconds.\"",
+      "Name one expectation you can loosen today.",
+      "Say: \"I can feel disappointed and still move forward.\"",
+      "Do one small repair action: clarify, reschedule, ask, or step back.",
+      "Think of a time something else worked out after disappointment.",
+      "Put the disappointment into words, then drink water and reset your body."
+    ],
+    reframeQuote: "Say: \"This disappointed me, but it does not close every door.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 8 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 8,
+    id: "humiliated",
+    name: "Humiliated",
+    emoji: "😳",
+    category: "Low",
+    bgColor: "#FDF2F8",
+    textColor: "#DB2777",
+    feelings: ["Embarrassed", "Ashamed", "Exposed", "Small"],
+    target: "Respected",
+    actionTitle: "Upright Self-Acceptance",
+    actionDesc: "Sit upright. Say: \"I can respect myself even if someone else did not.\"",
+    whyHelps: "Self-acceptance acts as a buffer against external judgment.",
+    actions: [
+      "Sit upright. Say: \"I can respect myself even if someone else did not.\"",
+      "Take your attention from their reaction back to your body. Feel your feet for 60 seconds.",
+      "Put one hand on your chest and say: \"This moment will pass.\"",
+      "Name one person whose opinion actually matters to you. Ignore the crowd for 60 seconds.",
+      "Uncurl your body. Let your posture say: \"I still belong here.\"",
+      "Say: \"Embarrassment is a feeling, and this moment will pass.\"",
+      "Put your hands under cold water or touch something cool for 60 seconds.",
+      "Imagine stepping out of the scene and watching it shrink in size.",
+      "Choose one dignified next move: pause, breathe, leave, or speak calmly.",
+      "Think of one thing you respect about yourself. Name it in one simple sentence. Example: \"I am good enough\"."
+    ],
+    reframeQuote: "Sit upright.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 9 — synced from Google Sheets (Joy ChatGPT 2026 Review: 5 changes)
+    serial: 9,
+    id: "bitter",
+    name: "Bitter",
+    emoji: "🍋",
+    category: "Angry",
+    bgColor: "#FFFBEB",
+    textColor: "#D97706",
+    feelings: ["Resentful", "Grudging", "Sour", "Hurt"],
+    target: "Free",
+    actionTitle: "Release the Heavy Burden",
+    actionDesc: "Say: \"I do not have to solve this right now. I choose my own peace.\" Imagine putting that burden down, then focus on one thing you want to enjoy today.",
+    whyHelps: "Visualizing setting down emotional weight relieves physiological tension.",
+    actions: [
+      "Say: \"I do not have to solve this right now. I choose my own peace.\" Imagine putting that burden down, then focus on one thing you want to enjoy today.",
+      "Ask yourself: \"What am I holding onto that no longer serves me?\" Choose one thing ahead of you and focus on that instead.",
+      "Open your hands and imagine releasing one old argument.",
+      "Think of the situation that left you feeling bitter. Say: \"I don't have to fix this right now.\" Then ask yourself: \"What would help me feel a little lighter in this moment?\"",
+      "Look forward, not back, for 60 seconds. Ask: \"What do I want now?\"",
+      "Shake out your hands once, then loosen your jaw and shoulders. Say: \"I can choose what gets my energy next.\"",
+      "Say: \"This does not get all of my attention today.\" Name one thing you want to give your energy to instead.",
+      "Write one word you want instead: peace, freedom, dignity, lightness. Repeat it.",
+      "Move your shoulders in slow circles and let your body stop bracing.",
+      "Choose one thing today that belongs to your future, not your past."
+    ],
+    reframeQuote: "Say: \"I do not have to solve this right now.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 10 — synced from Google Sheets (Joy ChatGPT 2026 Review: 1 changes)
+    serial: 10,
+    id: "angry",
+    name: "Mad",
+    emoji: "😡",
+    category: "Angry",
+    bgColor: "#FFF0F0",
+    textColor: "#DC2626",
+    feelings: ["Furious", "Mad", "Irritated", "Fuming"],
+    target: "Powerful",
+    actionTitle: "Wall Pushes for Energy Release",
+    actionDesc: "Do 10 wall push-ups or firm wall presses, if comfortable. Use the movement to release physical tension.",
+    whyHelps: "Isometric wall pushes safely discharge adrenaline and physical anger energy.",
+    actions: [
+      "Do 10 wall push-ups or firm wall presses, if comfortable. Use the movement to release physical tension.",
+      "Clench your fists for 5 seconds, release for 10 seconds, repeat 4 times.",
+      "Say: \"Anger shows something matters. I can choose my next move.\"",
+      "Walk quickly for 60 seconds or march in one place.",
+      "Write the sentence you want to shout, then do not send it yet.",
+      "Take 3 deep breaths before speaking. Make the exhale noisy if you need to.",
+      "Ask: \"What boundary is my anger asking for?\"",
+      "Put cold water on your wrists for 30 seconds, then breathe slowly.",
+      "Say: \"I am powerful without being destructive.\"",
+      "Step away from the trigger for 60 seconds if possible."
+    ],
+    reframeQuote: "Do 10 wall push-ups or firm wall presses, if comfortable.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 11 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 11,
+    id: "aggressive",
+    name: "Aggressive",
+    emoji: "🔥",
+    category: "Angry",
+    bgColor: "#FEF2F2",
+    textColor: "#991B1B",
+    feelings: ["Combative", "Hostile", "Fierce", "Attacking"],
+    target: "Peaceful / Powerful",
+    actionTitle: "Step Back & Open Hands",
+    actionDesc: "Step back physically if possible. Unclench your hands. Take a deep breath and say \"I am strong just the way I am, without hurting anyone.\"",
+    whyHelps: "Unclenching hands signals non-aggression directly to the motor cortex.",
+    actions: [
+      "Step back physically if possible. Unclench your hands. Take a deep breath and say \"I am strong just the way I am, without hurting anyone.\"",
+      "Lower your voice deliberately. Speak one sentence slower than usual.",
+      "Put both palms flat on a table or wall. Press gently for 10 seconds, release, and repeat 3 times.",
+      "Say: \"Pause first. Decide second.\" Wait 60 seconds.",
+      "Move your jaw side to side gently and relax your tongue.",
+      "Ask: \"What am I trying to protect?\" Name it without blaming.",
+      "Turn your body 45 degrees away from the trigger to reduce confrontation.",
+      "Do a quick power reset: feet grounded, shoulders down, eyes soft.",
+      "Choose one firm and empowered sentence: \"I need space\" or \"This is not okay.\"",
+      "Delay response for 60 seconds. Let the first wave pass."
+    ],
+    reframeQuote: "Step back physically if possible.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 12 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 12,
+    id: "frustrated",
+    name: "Frustrated",
+    emoji: "💥",
+    category: "Angry",
+    bgColor: "#FFF4EB",
+    textColor: "#EA580C",
+    feelings: ["Blocked", "Annoyed", "Impatient", "Stuck"],
+    target: "Capable / Confident",
+    actionTitle: "The Single Smallest Step",
+    actionDesc: "Ask: \"What is the next smallest step?\" Do only that step, not the whole problem.",
+    whyHelps: "Deconstructing a roadblock into 1 tiny step restores momentum.",
+    actions: [
+      "Ask: \"What is the next smallest step?\" Do only that step, not the whole problem.",
+      "Stop and name the blocked need: progress, help, clarity, time or control.",
+      "Take 5 slow breaths and loosen your hands.",
+      "Write the problem in one line. Cross out anything you cannot control.",
+      "Change one variable: location, order, tool, person, or time.",
+      "Say: \"I do not need the whole answer to take the next step.\"",
+      "Set a 60-second reset timer and just breathe.",
+      "Ask for one specific piece of help or information.",
+      "Stand up, stretch your arms overhead, take a deep breath, then let your arms drop quickly as you exhale with a big sigh.",
+      "Choose one ability you can use on this problem — organising, deciding, asking, researching, or trying something new. Decide which action you will take within the next 60 seconds."
+    ],
+    reframeQuote: "Ask: \"What is the next smallest step?\" Do only that step, not the whole problem.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 13 — synced from Google Sheets (Joy ChatGPT 2026 Review: 0 changes)
+    serial: 13,
+    id: "distant",
+    name: "Distant",
+    emoji: "🌌",
+    category: "Lonely",
+    bgColor: "#F0F9FF",
+    textColor: "#0369A1",
+    feelings: ["Detached", "Disconnected", "Withdrawn", "Isolated"],
+    target: "Connected / Accepted",
+    actionTitle: "No-Performance Reachout",
+    actionDesc: "Send one simple message or think of one person you do not have to perform for.",
+    whyHelps: "Connection without the burden of performance repairs social fatigue.",
+    actions: [
+      "Send one simple message or think of one person you do not have to perform for.",
+      "Put your hand on your chest and ask: \"What am I protecting by pulling away?\"",
+      "Name one feeling under the distance: hurt, tired, scared, or numb.",
+      "Take one gentle connecting action: eye contact, hello, message, or sitting near someone.",
+      "Say: \"I can connect without giving too much.\"",
+      "Notice one sound nearby and let it bring you back into the room.",
+      "Imagine a small bridge between you and one safe person.",
+      "Ask: \"Who feels safe enough for one tiny contact?\"",
+      "Uncross your arms, soften your face, and breathe slowly.",
+      "Do one caring act for yourself."
+    ],
+    reframeQuote: "Send one simple message or think of one person you do not have to perform for.",
+    column1Notes: "Preserved unchanged"
+  },
+  {
+    // Serial 14 — synced from Google Sheets (Joy ChatGPT 2026 Review: 1 changes)
+    serial: 14,
+    id: "critical",
+    name: "Critical",
+    emoji: "🔍",
+    category: "Overwhelmed",
+    bgColor: "#F5F3FF",
+    textColor: "#6D28D9",
+    feelings: ["Judgmental", "Fault-finding", "Harsh", "Perfectionist"],
+    target: "Curious",
+    actionTitle: "Curiosity Perspective Shift",
+    actionDesc: "Replace \"What is wrong with this?\" with \"What is this trying to show me?\"",
+    whyHelps: "Curiosity activates problem-solving circuits instead of judgment circuits.",
+    actions: [
+      "Replace \"What is wrong with this?\" with \"What is this trying to show me?\"",
+      "Say one neutral observation without judgement.",
+      "Ask: \"Can I be curious for 60 seconds before deciding?\"",
+      "Find one thing that is working, even if much is not.",
+      "Speak to yourself with curiosity, as if speaking to a beginner you like.",
+      "Turn the criticism into a request: \"I need…\"",
+      "Relax your forehead and jaw. Let your face soften.",
+      "Say: \"Noticing a flaw does not mean attacking it.\"",
+      "Name one helpful improvement, not 10 complaints.",
+      "Ask: \"What would kindness plus honesty sound like?\""
+    ],
+    reframeQuote: "Replace \"What is wrong with this?\" with \"What is this trying to show me?\".",
+    column1Notes: "Preserved unchanged"
+  },
+  {
+    // Serial 15 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 15,
+    id: "disapproving",
+    name: "Disapproving",
+    emoji: "🤨",
+    category: "Angry",
+    bgColor: "#FFFBEB",
+    textColor: "#B45309",
+    feelings: ["Displeased", "Critical", "Unaccepting", "Resistant"],
+    target: "Understanding / Curious",
+    actionTitle: "Understand Without Agreeing",
+    actionDesc: "Say: \"I do not have to agree to understand.\" Find one possible reason behind the behaviour.",
+    whyHelps: "Decoupling empathy from agreement lowers defensive mental guard.",
+    actions: [
+      "Say: \"I do not have to agree to understand.\" Find one possible reason behind the behaviour.",
+      "Pause, take a big breath and separate the person from the behaviour.",
+      "Ask: \"What value of mine feels challenged?\"",
+      "Lower your shoulders and let your face become neutral.",
+      "Replace \"They should…\" with \"I prefer…\"",
+      "Before judging, ask: \"What might I not know yet?\" Wait 10 seconds before deciding.",
+      "Say: \"Their choice is theirs. My response is mine.\"",
+      "Look for one missing piece of context before deciding.",
+      "Pause for 60 seconds before commenting.",
+      "Ask: \"Is my disapproval useful right now?\""
+    ],
+    reframeQuote: "Say: \"I do not have to agree to understand.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 16 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 16,
+    id: "uncomfortable",
+    name: "Uncomfortable",
+    emoji: "😣",
+    category: "Overwhelmed",
+    bgColor: "#F1F5F9",
+    textColor: "#334155",
+    feelings: ["Uneasy", "Awkward", "Tense", "Restless"],
+    target: "Peaceful",
+    actionTitle: "Body Sensation Scan",
+    actionDesc: "Scan your body. Name the exact sensation: tight chest, hot face, heavy stomach.",
+    whyHelps: "Objective naming of sensations removes panic from physical discomfort.",
+    actions: [
+      "Scan your body. Name the exact sensation: tight chest, hot face, heavy stomach.",
+      "Adjust one thing physically: clothes, chair, light, temperature or position.",
+      "Put both feet flat and say: \"I can notice this discomfort and I can decide what I need next.\"",
+      "Put both feet flat and feel the support underneath you.",
+      "Name the discomfort in one word, then relax one area of your body that feels tense for 10 seconds.",
+      "Ask: \"What would make this 5% more tolerable?\" Do that.",
+      "Relax your belly for 10 seconds, then your shoulders for 10 seconds.",
+      "Look at something stable and still for 60 seconds.",
+      "Change one small thing around you: your seat, posture, lighting, sound, clothing, or distance. Say: \"I'm allowed to make this easier for myself.\"",
+      "Say: \"I can stay with this for one minute.\""
+    ],
+    reframeQuote: "Scan your body.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 17 — synced from Google Sheets (Joy ChatGPT 2026 Review: 0 changes)
+    serial: 17,
+    id: "awful",
+    name: "Awful",
+    emoji: "🌑",
+    category: "Low",
+    bgColor: "#F3F4F6",
+    textColor: "#1F2937",
+    feelings: ["Terrible", "Miserable", "Dreadful", "Heavy"],
+    target: "Hopeful",
+    actionTitle: "Temporary Moment Anchor",
+    actionDesc: "Say: \"This is a moment, not my whole life.\" Look for one thing still okay right now.",
+    whyHelps: "Recognizing impermanence prevents temporary feeling from seeming endless.",
+    actions: [
+      "Say: \"This is a moment, not my whole life.\" Look for one thing still okay right now.",
+      "Open a window, drink water, or change lighting for a physical reset.",
+      "Name 3 neutral facts: date, place, what your feet touch.",
+      "Put your hand on your chest and say: \"This is hard, and I am here.\"",
+      "Take one tiny care action: wash face, brush hair, stretch, or sit down.",
+      "Ask: \"What would make the next 60 seconds slightly less awful?\"",
+      "Find one colour or sound that feels less terrible and focus on it.",
+      "Repeat: \"One minute at a time.\" Breathe slowly.",
+      "Move one object into order. Give your brain a tiny win.",
+      "Let out a long sigh 5 times and soften your body."
+    ],
+    reframeQuote: "Say: \"This is a moment, not my whole life.",
+    column1Notes: "Preserved unchanged"
+  },
+  {
+    // Serial 18 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 18,
+    id: "repelled",
+    name: "Repelled",
+    emoji: "🛑",
+    category: "Overwhelmed",
+    bgColor: "#FEE2E2",
+    textColor: "#991B1B",
+    feelings: ["Disgusted", "Averse", "Pushed away", "Overwhelmed"],
+    target: "Free / Boundaried",
+    actionTitle: "Physical Space & Boundary",
+    actionDesc: "Take one step back or lean back. Say: \"My no is allowed.\"",
+    whyHelps: "Physical distance reinforces internal autonomy and personal boundaries.",
+    actions: [
+      "Take one step back or lean back. Say: \"My no is allowed.\"",
+      "Turn slightly away and give your body more space.",
+      "Name the boundary: \"Too close\", \"too much\", \"not for me\", or \"not now.\"",
+      "Put your hands under cool water or touch a neutral texture for 60 seconds to help you reset.",
+      "Say: \"I can reject the situation without losing myself.\"",
+      "Ask: \"What distance feels right?\" Create that distance if possible.",
+      "Relax your face and create a little more physical space around you if possible.",
+      "Imagine a clear protective bubble around you.",
+      "Choose one clean exit sentence: \"I need a moment\" or \"I'll step away.\"",
+      "Notice where the repulsion sits in your body and soften around it."
+    ],
+    reframeQuote: "Take one step back or lean back.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 19 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 19,
+    id: "hurt",
+    name: "Hurt",
+    emoji: "🩹",
+    category: "Low",
+    bgColor: "#FFF0F3",
+    textColor: "#BE123C",
+    feelings: ["Pained", "Wounded", "Grieving", "Heartbroken"],
+    target: "Cared for / Valued",
+    actionTitle: "Hand on Hurt & Self-Value",
+    actionDesc: "Put your hand where you feel the hurt. Say: \"This matters because I matter.\"",
+    whyHelps: "Self-directed care validates personal pain without shame.",
+    actions: [
+      "Put your hand where you feel the hurt. Say: \"This matters because I matter.\"",
+      "Take 5 slow breaths and let your face soften.",
+      "Say: \"I can feel this without chasing an explanation or response right now.\"",
+      "Do one tender thing: blanket, tea, water, fresh air, or quiet.",
+      "Name the hurt simply: ignored, dismissed, betrayed, unseen, or misunderstood.",
+      "Place both hands over your heart for 60 seconds.",
+      "Ask: \"What kindness do I need right now?\" Give yourself one small piece.",
+      "Imagine speaking to yourself like a loving friend.",
+      "Let your shoulders drop and release one layer of tension.",
+      "Say: \"This hurt is real, and I can care for myself while it passes.\""
+    ],
+    reframeQuote: "Put your hand where you feel the hurt.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 20 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 20,
+    id: "depressed",
+    name: "Depressed",
+    emoji: "🕯️",
+    category: "Low",
+    bgColor: "#EEF2FF",
+    textColor: "#3730A3",
+    feelings: ["Down", "Empty", "Heavy", "Unmotivated"],
+    target: "Hopeful",
+    actionTitle: "Listen to Music & Tiny Movement",
+    actionDesc: "Open curtains, drink water, or step outside for 60 seconds. Tiny movement first.",
+    whyHelps: "Micro-movements and music gently stimulate dopamine release without overwhelming.",
+    actions: [
+      "Open curtains, drink water, or step outside for 60 seconds. Tiny movement first.",
+      "Put both feet on the floor and sit upright for 60 seconds.",
+      "Choose one micro-task: rinse a cup, fold one item, or clear one small space.",
+      "Say: \"I can start with one tiny movement before motivation arrives.\"",
+      "Turn your face toward light, even artificial light, close your eyes and breathe slowly for 60 seconds.",
+      "Move your body gently: shoulder rolls, ankle circles, or a slow walk.",
+      "Name one thing that does not require solving today.",
+      "Text one safe person a simple dot or \"rough day\" if words are too much.",
+      "Take one sip of water and one deeper breath. Start there.",
+      "Say: \"The smallest action counts.\" Then do one tiny action."
+    ],
+    reframeQuote: "Open curtains, drink water, or step outside for 60 seconds.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 21 — synced from Google Sheets (Joy ChatGPT 2026 Review: 0 changes)
+    serial: 21,
+    id: "guilty",
+    name: "Guilty",
+    emoji: "🥺",
+    category: "Low",
+    bgColor: "#F3E8FF",
+    textColor: "#7E22CE",
+    feelings: ["Regretful", "Ashamed", "Remorseful", "Faulty"],
+    target: "Responsible / Proud",
+    actionTitle: "Honest Repair Selection",
+    actionDesc: "Ask: \"Is there one repair I can make?\" If yes, choose one small honest action.",
+    whyHelps: "Focusing on constructive repair shifts mind from shame to responsibility.",
+    actions: [
+      "Ask: \"Is there one repair I can make?\" If yes, choose one small honest action.",
+      "Say: \"Guilt can guide repair; it does not need to punish me forever.\"",
+      "Separate fact from story: what happened, without insults.",
+      "Put one hand on your heart and one on your belly. Breathe slowly.",
+      "Ask: \"What would responsible, not self-attacking, look like?\"",
+      "Write or say one clean apology sentence, even if you do not send it yet.",
+      "If there is nothing to repair, say: \"I release one layer of guilt now.\"",
+      "Name one lesson and one next better choice.",
+      "Relax your shoulders and stop replaying for 60 seconds.",
+      "Say: \"I can be accountable and still be human.\""
+    ],
+    reframeQuote: "Ask: \"Is there one repair I can make?\" If yes, choose one small honest action.",
+    column1Notes: "Preserved unchanged"
+  },
+  {
+    // Serial 22 — synced from Google Sheets (Joy ChatGPT 2026 Review: 5 changes)
+    serial: 22,
+    id: "despair",
+    name: "Despair",
+    emoji: "⚓",
+    category: "Low",
+    bgColor: "#F1F5F9",
+    textColor: "#0F172A",
+    feelings: ["Hopeless", "Lost", "Gloom", "Defeated"],
+    target: "Hopeful",
+    actionTitle: "Survival Anchor & The Next Minute",
+    actionDesc: "Name one person, place, routine, or memory that has helped you through a hard time. Choose one tiny way to reconnect with it now.",
+    whyHelps: "Narrowing timeline to the next 60 seconds reduces unbearable future worry.",
+    actions: [
+      "Name one person, place, routine, or memory that has helped you through a hard time. Choose one tiny way to reconnect with it now.",
+      "Put both feet on the floor and slowly count from 1 to 10 while noticing the support underneath you.",
+      "Say: \"This feeling is huge, but it is still a feeling.\"",
+      "Look for one tiny sign of life: light, air, sound, warmth, movement.",
+      "Hold a cup, pillow, or blanket and feel its weight for 60 seconds.",
+      "Do not solve your whole life right now. Choose one caring action for the next minute.",
+      "Say: \"I can borrow hope from knowing that moods can change. I only need one next step for now.\"",
+      "Open a door or window if safe. Let fresh air mark a new minute.",
+      "Think of one person, pet, place, or memory that matters to you. Hold it in mind for 60 seconds.",
+      "Repeat: \"Next minute only.\" Do one tiny grounding action."
+    ],
+    reframeQuote: "Name one person, place, routine, or memory that has helped you through a hard time.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 23 — synced from Google Sheets (Joy ChatGPT 2026 Review: 1 changes)
+    serial: 23,
+    id: "vulnerable",
+    name: "Vulnerable",
+    emoji: "🌱",
+    category: "Anxious",
+    bgColor: "#ECFDF5",
+    textColor: "#047857",
+    feelings: ["Exposed", "Unprotected", "Sensitive", "Raw"],
+    target: "Trusting",
+    actionTitle: "Safe Boundary & Reassurance",
+    actionDesc: "Say: \"Feeling vulnerable does not automatically mean I am unsafe.\" Choose one boundary you can set, or one person who feels trustworthy.",
+    whyHelps: "Framing vulnerability as courage builds self-trust.",
+    actions: [
+      "Say: \"Feeling vulnerable does not automatically mean I am unsafe.\" Choose one boundary you can set, or one person who feels trustworthy.",
+      "Put a hand on your chest and breathe slowly into the feeling.",
+      "Name what you need: privacy, kindness, reassurance, space or support.",
+      "Wrap yourself in a blanket or place a cushion behind your back.",
+      "Say: \"I can be open and protected at the same time.\"",
+      "Choose what not to share. Let that boundary strengthen you.",
+      "Look around and name 3 signs that this moment is manageable.",
+      "Take one small self-protective action: pause, mute, close, step back.",
+      "Imagine a soft shield around you that lets care in and pressure out.",
+      "Say one honest sentence to yourself: \"I feel exposed, and I can care for myself.\""
+    ],
+    reframeQuote: "Say: \"Feeling vulnerable does not automatically mean I am unsafe.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 24 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 24,
+    id: "lonely",
+    name: "Lonely",
+    emoji: "👤",
+    category: "Lonely",
+    bgColor: "#EFF6FF",
+    textColor: "#1D4ED8",
+    feelings: ["Alone", "Isolated", "Unseen", "Missing connection"],
+    target: "Connected / Accepted",
+    actionTitle: "Low-Pressure Warm Text",
+    actionDesc: "Send a low-pressure message: \"Thinking of you. Hope you're okay.\" No big explanation needed.",
+    whyHelps: "Reaching out gently removes performance pressure while signaling warmth.",
+    actions: [
+      "Send a low-pressure message: \"Thinking of you. Hope you're okay.\" No big explanation needed.",
+      "Put your hand on your heart and imagine one person or pet who has cared about you.",
+      "Go where there are people nearby, even if you do not talk: café, park, library, shop.",
+      "Say: \"Loneliness is a signal that I want connection; it is not proof that I am unwanted.\"",
+      "Listen to a human voice for 60 seconds: voice note, podcast, video or song.",
+      "Name 3 people, pets, or communities you have felt connected to, now or in the past.",
+      "Do one tiny reaching-out action: like, comment, message, or call.",
+      "Sit near a window or outside and let the world feel less far away.",
+      "Say: \"I can make one small bridge.\" Then choose one bridge.",
+      "Give yourself the warmth you wanted from someone else: tea, blanket, kind words."
+    ],
+    reframeQuote: "Send a low-pressure message: \"Thinking of you.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 25 — synced from Google Sheets (Joy ChatGPT 2026 Review: 0 changes)
+    serial: 25,
+    id: "tired",
+    name: "Tired",
+    emoji: "🔋",
+    category: "Low",
+    bgColor: "#ECFDF5",
+    textColor: "#059669",
+    feelings: ["Drained", "Exhausted", "Sleepy", "Burnt Out"],
+    target: "Rested / Peaceful",
+    actionTitle: "60-Second Complete Rest",
+    actionDesc: "Close your eyes for 60 seconds. Drop your shoulders. Ask: \"What can wait?\"",
+    whyHelps: "Closing eyes shuts down 80% of sensory intake, allowing immediate rest.",
+    actions: [
+      "Close your eyes for 60 seconds. Drop your shoulders. Ask: \"What can wait?\"",
+      "Take 6 slow breaths and let your body be heavy.",
+      "Drink water slowly and unclench your jaw.",
+      "Do a quick energy audit: what is draining you most right now?",
+      "Choose one thing to delay, delete or simplify.",
+      "Put your phone down and rest your eyes on something still.",
+      "Stretch your neck and shoulders gently for 60 seconds.",
+      "Say: \"Rest is a useful action.\"",
+      "Dim the lights or reduce one sensory input.",
+      "Sit or lie down with no task for exactly 60 seconds."
+    ],
+    reframeQuote: "Close your eyes for 60 seconds.",
+    column1Notes: "Preserved unchanged"
+  },
+  {
+    // Serial 26 — synced from Google Sheets (Joy ChatGPT 2026 Review: 2 changes)
+    serial: 26,
+    id: "stressed",
+    name: "Stressed",
+    emoji: "⚡",
+    category: "Overwhelmed",
+    bgColor: "#FDF2F8",
+    textColor: "#BE185D",
+    feelings: ["Tense", "Pressured", "Frustrated", "Overworked"],
+    target: "Calm / Powerful",
+    actionTitle: "Write 3 Stressors & Choose 1 Action",
+    actionDesc: "Write 3 things that feel stressful right now. Circle one thing you can act on today.",
+    whyHelps: "Writing down stressors offloads working memory and clarifies single focus.",
+    actions: [
+      "Write 3 things that feel stressful right now. Circle one thing you can act on today.",
+      "Exhale slowly 6 times. Let the exhale be longer than the inhale.",
+      "Ask: \"What is urgent, what is important, and what is noise?\"",
+      "Do one 60-second tidy of your immediate space.",
+      "Say: \"One thing at a time.\" Then choose the one thing.",
+      "Press your feet firmly into the floor and look around the room. Name three things you can see, then say: \"I'm here, and I can deal with one thing at a time.\"",
+      "Make a tiny list: now, later, not mine.",
+      "Turn off one notification or close one tab.",
+      "Stand up, shake your arms, and roll your shoulders.",
+      "Ask: \"What can I make 10% easier?\" Do that."
+    ],
+    reframeQuote: "Write 3 things that feel stressful right now.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 27 — synced from Google Sheets (Joy ChatGPT 2026 Review: 1 changes)
+    serial: 27,
+    id: "busy",
+    name: "Busy",
+    emoji: "⏳",
+    category: "Overwhelmed",
+    bgColor: "#FEF3C7",
+    textColor: "#B45309",
+    feelings: ["Rushed", "Hurried", "Frantic", "Overcommitted"],
+    target: "Content / In control",
+    actionTitle: "Pause, Delete, or Delay 1 Task",
+    actionDesc: "Say: \"Busy is not the same as productive.\" Pick one task to pause, delete or delay.",
+    whyHelps: "Intentionally choosing to delay one task creates immediate cognitive breathing room.",
+    actions: [
+      "Say: \"Busy is not the same as productive.\" Pick one task to pause, delete or delay.",
+      "Write the next 3 tasks. Star only the one that matters most.",
+      "Set a 60-second pause before starting the next thing.",
+      "Ask: \"What am I doing from habit or pressure rather than because it matters?\"",
+      "Close one tab, one app, or one open loop.",
+      "Take one slow breath between tasks. Do not rush the transition.",
+      "Say: \"I am allowed to choose.\" Then choose one thing.",
+      "Put a hand on your chest and ask: \"What pace would be kinder?\"",
+      "Remove one non-essential thing from today.",
+      "Look away from screens for 60 seconds and let your brain catch up."
+    ],
+    reframeQuote: "Say: \"Busy is not the same as productive.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+  {
+    // Serial 28 — synced from Google Sheets (Joy ChatGPT 2026 Review: 1 changes)
+    serial: 28,
+    id: "bored",
+    name: "Bored",
+    emoji: "🥱",
+    category: "Low",
+    bgColor: "#F3F4F6",
+    textColor: "#374151",
+    feelings: ["Uninterested", "Dull", "Restless", "Stagnant"],
+    target: "Curious / Interested",
+    actionTitle: "5% Curiosity Shift",
+    actionDesc: "Ask: \"What would make this 5% more interesting?\" Change location, music, order, or method.",
+    whyHelps: "A 5% tweak lowers friction and rekindles intrinsic interest.",
+    actions: [
+      "Ask: \"What would make this 5% more interesting?\" Change location, music, order, or method.",
+      "Set a 60-second mini-challenge: do it faster, slower, neater, or differently.",
+      "Look around and find one thing you have never noticed before.",
+      "Ask: \"Am I bored, under-stimulated, or putting off something I do not want to start?\"",
+      "Add novelty: new pen, new seat, new playlist, new sequence.",
+      "Do one tiny creative action: doodle, rearrange, rename, or imagine.",
+      "Move your body for 60 seconds to wake up your attention.",
+      "Say: \"Curiosity can start small.\" Ask one question about what is in front of you.",
+      "Pick one task and turn it into a game for 60 seconds.",
+      "Do one thing your future self would find mildly interesting."
+    ],
+    reframeQuote: "Ask: \"What would make this 5% more interesting?\" Change location, music, order, or method.",
+    column1Notes: "Updated to ChatGPT 2026 suggestions per Joy's review"
+  },
+];
+
+// For backward compatibility
+export const MOODS = COUNSELOR_MOODS;
