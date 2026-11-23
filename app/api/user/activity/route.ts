@@ -14,6 +14,23 @@ type CheckinRow = {
   created_at: string;
 };
 
+type DatabaseProgress = {
+  daily_count: number;
+  qualifying_days: number;
+  total_count: number;
+  report_eligible: boolean;
+};
+
+function toReportProgress(progress: DatabaseProgress) {
+  return {
+    dailyCount: Number(progress.daily_count) || 0,
+    qualifyingDays: Number(progress.qualifying_days) || 0,
+    totalCount: Number(progress.total_count) || 0,
+    eligible: Boolean(progress.report_eligible),
+    timezone: 'UTC',
+  };
+}
+
 function toMoodLift(row: CheckinRow) {
   return {
     id: row.id,
@@ -66,9 +83,18 @@ export async function GET(request: Request) {
       .limit(100);
 
     if (error) throw error;
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: progress, error: progressError } = await admin.rpc('get_mood_lift_progress', {
+      p_user_id: user.id,
+      p_saved_at: today,
+    });
+    if (progressError) throw progressError;
+    if (!progress) throw new Error('Report progress was not returned.');
+
     return NextResponse.json({
       success: true,
       checkins: ((data || []) as CheckinRow[]).map(toMoodLift),
+      reportProgress: toReportProgress(progress as DatabaseProgress),
     });
   } catch (error) {
     console.error('[activity] Failed to load:', error);
@@ -118,12 +144,20 @@ export async function POST(request: Request) {
     const saveResult = atomicResult as {
       limit_reached: boolean;
       daily_count: number;
+      qualifying_days: number;
+      total_count: number;
+      report_eligible: boolean;
+      show_daily_reminder?: boolean;
       checkin?: CheckinRow;
     } | null;
 
     if (saveResult?.limit_reached) {
       return NextResponse.json(
-        { error: 'You have already saved today’s 3 Mood Lifts.', dailyCount: saveResult.daily_count },
+        {
+          error: 'You have already saved today’s 3 Mood Lifts.',
+          dailyCount: saveResult.daily_count,
+          reportProgress: toReportProgress(saveResult),
+        },
         { status: 409 },
       );
     }
@@ -144,6 +178,8 @@ export async function POST(request: Request) {
       success: true,
       checkin: toMoodLift(saveResult.checkin),
       dailyCount,
+      reportProgress: toReportProgress(saveResult),
+      showDailyReminder: Boolean(saveResult.show_daily_reminder),
     });
   } catch (error) {
     console.error('[activity] Failed to save:', error);

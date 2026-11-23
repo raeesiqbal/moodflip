@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { trigger7DayReportDownload } from '@/lib/generatePDF';
 import { supabase } from '@/lib/supabase';
 import { notify } from '@/lib/toast';
 import { useAuth } from '@/components/AuthProvider';
@@ -23,6 +22,14 @@ interface SavedMoodFlip {
   targetMood: string;
   action: string;
   actionDesc?: string;
+}
+
+interface ReportProgress {
+  dailyCount: number;
+  qualifyingDays: number;
+  totalCount: number;
+  eligible: boolean;
+  timezone: string;
 }
 
 type Tab = 'My Mood Lifts' | 'My 7-Day Report' | 'Downloads' | 'Account Settings';
@@ -522,6 +529,43 @@ function MyMoodFlipsTab({ onCountChange }: { onCountChange: (count: number) => v
 // ─── Tab: My 7-Day Report (Spec §10) ──────────────────────────────────────────
 
 function My7DayReportTab() {
+  const [progress, setProgress] = useState<ReportProgress | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    const loadProgress = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Your session has expired. Please sign in again.');
+
+        const response = await fetch('/api/user/activity', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success || !result.reportProgress) {
+          throw new Error(result.error || 'Unable to load your report progress.');
+        }
+
+        if (active) setProgress(result.reportProgress as ReportProgress);
+      } catch (error) {
+        if (active) {
+          setErrorMessage(error instanceof Error ? error.message : 'Unable to load your report progress.');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void loadProgress();
+    return () => { active = false; };
+  }, []);
+
+  const qualifyingDays = Math.min(progress?.qualifyingDays || 0, 7);
+  const remainingDays = Math.max(7 - qualifyingDays, 0);
+
   return (
     <section>
       <h2 className="text-xl font-bold text-[#4F438B] mb-2">My 7-Day Report</h2>
@@ -534,6 +578,26 @@ function My7DayReportTab() {
         <h3 className="text-lg font-bold text-[#4F438B] mb-2">
           Your Personalised PDF Progress Report
         </h3>
+        {loading ? (
+          <p role="status" className="text-sm font-semibold text-[#7464AC] mb-5 animate-pulse">
+            Loading report progress…
+          </p>
+        ) : errorMessage ? (
+          <p role="alert" className="text-sm font-semibold text-red-600 mb-5">
+            {errorMessage}
+          </p>
+        ) : (
+          <div className="mb-5">
+            <p className="text-base font-bold text-[#4F438B]">
+              7-Day Report Progress: Day {qualifyingDays} of 7
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              {progress?.eligible
+                ? 'You have completed seven qualifying calendar days.'
+                : `${remainingDays} more qualifying ${remainingDays === 1 ? 'day' : 'days'} needed. Days do not need to be consecutive.`}
+            </p>
+          </div>
+        )}
         <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto leading-relaxed">
           Get a comprehensive PDF report of your 7-day mood journey, including your Mood Lifts,
           patterns, and personalised actionable suggestions.
@@ -563,23 +627,26 @@ function My7DayReportTab() {
           </ul>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link
-            href="/checkout"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7464AC] to-[#4F438B] text-white font-semibold px-8 py-3 text-sm hover:opacity-90 transition shadow-xs"
-          >
-            <span>📄</span> Get My 7-Day MoodFlip Report — US$7
-          </Link>
-          <button
-            type="button"
-            onClick={() => trigger7DayReportDownload()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#7464AC] text-[#7464AC] bg-white font-bold px-6 py-3 text-sm hover:bg-[#F4EBF5] transition cursor-pointer shadow-2xs"
-          >
-            <span>📥</span> Download 7-Day MoodFlip Report (PDF)
-          </button>
-        </div>
+        {progress?.eligible ? (
+          <div>
+            <p className="text-sm font-bold text-[#4F438B] mb-4 max-w-lg mx-auto leading-relaxed">
+              Your 7-Day MoodFlip Report is ready. Download your personalised report with your saved moods,
+              positive moods, 60-second actions, and mood pattern summary.
+            </p>
+            <Link
+              href="/checkout"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7464AC] to-[#4F438B] text-white font-semibold px-8 py-3 text-sm hover:opacity-90 transition shadow-xs"
+            >
+              <span>📄</span> Get My 7-Day MoodFlip Report — US$7
+            </Link>
+          </div>
+        ) : (
+          <p className="text-sm font-semibold text-[#7464AC]">
+            Save at least one Mood Lift on seven different calendar days to unlock the purchase option.
+          </p>
+        )}
         <p className="mt-4 text-xs text-gray-400">
-          Secure payment. Personalised PDF unlocked after 7 calendar days of Mood Lifts.
+          Progress is based on saved UTC calendar days. Up to three Mood Lifts may be saved per day.
         </p>
       </div>
     </section>
@@ -603,21 +670,9 @@ function DownloadsTab() {
           Your personalised PDF reports and resources are permanently stored here. You can download
           or re-generate them at any time.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => trigger7DayReportDownload()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7464AC] to-[#4F438B] text-white font-semibold px-6 py-3 text-sm hover:opacity-90 transition cursor-pointer shadow-xs"
-          >
-            <span>📥</span> Download 7-Day Report (Official Template)
-          </button>
-          <Link
-            href="/checkout"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-[#E4DAD7] bg-white text-[#1A143F] font-semibold px-6 py-3 text-sm hover:bg-[#F4EBF5] transition shadow-2xs"
-          >
-            <span>🛒</span> Purchase Another Report
-          </Link>
-        </div>
+        <p className="text-sm font-semibold text-[#7464AC]">
+          Purchased reports will appear here when they are available for download.
+        </p>
       </div>
     </section>
   );

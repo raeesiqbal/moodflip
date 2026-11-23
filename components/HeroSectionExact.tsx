@@ -39,6 +39,8 @@ import {
 
 export type MainMoodFamily = "Sad" | "Fearful" | "Angry" | "Disgusted" | "Bad";
 
+const DAILY_MOOD_LIFT_LIMIT_MESSAGE = "You've saved today's 3 Mood Lifts. You can still use the free MoodFlip tool. You can save more Mood Lifts tomorrow.";
+
 export const MAGNIFIC_CLOUDS: Record<MainMoodFamily, { src: string; alt: string }> = {
   Sad: { src: "/moods/clouds/purple/cloud-sad.png", alt: "Sad Purple Cartoon Cloud" },
   Fearful: { src: "/moods/clouds/purple/cloud-fearful.png", alt: "Fearful Purple Cartoon Cloud" },
@@ -504,7 +506,6 @@ export default function HeroSectionExact({
   const [actionRotationIndex, setActionRotationIndex] = useState<Record<string, number>>({});
   const [showSecondVisitPopup, setShowSecondVisitPopup] = useState(false);
   const [dailyCheckInCount, setDailyCheckInCount] = useState(0);
-  const [progressMsg, setProgressMsg] = useState("");
   const [day2Reminder, setDay2Reminder] = useState<string>("");
 
   // Keep an open tab aligned with the server's UTC calendar-day boundary.
@@ -651,23 +652,6 @@ export default function HeroSectionExact({
         }
       } catch (e) {}
 
-      // ── Spec §16 Popup #2: Daily reminder from 2nd saved day onward (once per day) ──
-      try {
-        const historyRaw = localStorage.getItem("moodflip_checkin_history");
-        if (historyRaw) {
-          const history = JSON.parse(historyRaw);
-          if (Array.isArray(history)) {
-            const uniqueDays = new Set(history.map((c: { date?: string }) => c.date?.split("T")[0]).filter(Boolean));
-            if (uniqueDays.size >= 2 && uniqueDays.size < 7) {
-              const lastShownDay2 = localStorage.getItem("moodflip_day2_reminder_last_date");
-              if (lastShownDay2 !== today) {
-                setDay2Reminder("You’re building your 7-Day MoodFlip Report. Save up to 3 Mood Lifts per day. Your personalised report will be available after 7 days for US$7.");
-                localStorage.setItem("moodflip_day2_reminder_last_date", today);
-              }
-            }
-          }
-        }
-      } catch (e) {}
     }
 
     const handlePopupSettingsUpdate = () => {
@@ -774,19 +758,6 @@ export default function HeroSectionExact({
     // ── Spec v4: Enforce max 3 saved check-ins per calendar day ──
     const today = new Date().toISOString().split("T")[0];
     const dailyData = JSON.parse(localStorage.getItem("moodflip_daily_checkins") || "{}");
-    const savedCountForToday = Number(dailyData[today]) || 0;
-
-    // Read the count for the date at click time rather than trusting component
-    // state, which may still contain yesterday's 3/3 when a tab crosses UTC
-    // midnight without being refreshed.
-    if (dailyCheckInCount !== savedCountForToday) {
-      setDailyCheckInCount(savedCountForToday);
-    }
-
-    if (savedCountForToday >= 3) {
-      notify.info("You have already saved today’s 3 Mood Lifts.");
-      return;
-    }
 
     setIsSaving(true);
 
@@ -813,11 +784,11 @@ export default function HeroSectionExact({
         dailyData[today] = limitCount;
         localStorage.setItem("moodflip_daily_checkins", JSON.stringify(dailyData));
         setDailyCheckInCount(limitCount);
-        notify.info("You have already saved today’s 3 Mood Lifts.");
+        notify.info(DAILY_MOOD_LIFT_LIMIT_MESSAGE);
         return;
       }
 
-      if (!response.ok || !result.success || !result.checkin) {
+      if (!response.ok || !result.success || !result.checkin || !result.reportProgress) {
         throw new Error(result.error || "Your Mood Lift could not be saved. Please try again.");
       }
 
@@ -836,25 +807,27 @@ export default function HeroSectionExact({
       localStorage.setItem("moodflip_daily_checkins", JSON.stringify(dailyData));
       setDailyCheckInCount(newCount);
 
-      // ── Spec §16: 7-Day Report Progress Messages ──
-      const savedDays = new Set<string>(
-        (updated as {date:string}[]).map((c) => c.date.split("T")[0])
-      );
-      const daysSaved = savedDays.size;
+      // The backend derives both values from saved database records. Multiple
+      // Mood Lifts on one date therefore advance the daily count but not days.
+      const daysSaved = Math.min(Number(result.reportProgress.qualifyingDays) || 0, 7);
+      const totalSaved = Number(result.reportProgress.totalCount) || 0;
 
       // Spec §16 Popup #3: Progress message after saving a Mood Flip
-      let progressNote = `Saved. Today’s Mood Lifts: [${newCount}/3] 7-Day Report progress: Day [${Math.min(daysSaved, 7)}] of 7`;
+      let progressNote = `Saved.\n\nToday's Mood Lifts: [${newCount}/3]\n\n7-Day Report progress: Day [${daysSaved}] of 7`;
 
-      if (updated.length === 1) {
+      if (totalSaved === 1) {
         // Spec §16 Popup #1: After first saved Mood Flipping
-        progressNote = "Your first MoodFlip is saved. You can save up to 3 Mood Lifts per day. After 7 days, you’ll be able to download your personalised 7-Day MoodFlip Report.";
+        progressNote = "Your first Mood Lift is saved.\n\nYou can save up to 3 Mood Lifts per day. After 7 days, you’ll be able to download your personalised 7-Day MoodFlip Report.";
       } else if (daysSaved >= 7) {
         // Spec §16 Popup #5: 7-day report ready
-        progressNote = "Your 7-Day MoodFlip Report is ready. Download your personalised report with your saved moods, positive moods, 60-second actions, and mood pattern summary. Download for US$7";
+        progressNote = "Your 7-Day MoodFlip Report is ready.\n\nDownload your personalised report with your saved moods, positive moods, 60-second actions, and mood pattern summary.";
+      } else if (result.showDailyReminder) {
+        // The specification leaves the trigger open. Show this only after a
+        // successful save. The backend claims it once per user and UTC day.
+        setDay2Reminder("You're building your 7-Day MoodFlip Report. Save up to 3 Mood Lifts per day. Your personalized report will be available after 7 days for US$7.");
       }
 
       setSavedMsg(progressNote);
-      setProgressMsg(progressNote);
       setIsSavedForCurrentFlip(true);
       setTimeout(() => setSavedMsg(""), 7000);
     } catch (error) {
@@ -1315,6 +1288,7 @@ export default function HeroSectionExact({
                     maxWidth: 280,
                     lineHeight: 1.4,
                     fontWeight: 600,
+                    whiteSpace: "pre-line",
                     background: "rgba(116,100,172,0.08)",
                     padding: "6px 12px",
                     borderRadius: 12,
