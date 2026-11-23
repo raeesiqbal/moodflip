@@ -70,9 +70,29 @@ Open [http://localhost:3005](http://localhost:3005).
 | `MISTRAL_API_KEY` | For AI features | Server-only Mistral API credential |
 | `RESEND_API_KEY` | For contact form | Sends contact messages through Resend |
 | `CONTACT_FROM_EMAIL` | For contact form | Verified sender identity used by Resend |
+| `CONTACT_TO_EMAIL` | For contact form | Inbox that receives contact messages |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Contact bot protection | Public Cloudflare Turnstile widget key |
+| `TURNSTILE_SECRET_KEY` | Contact bot protection | Server-only Cloudflare Turnstile verification key |
+| `TURNSTILE_EXPECTED_HOSTNAMES` | Contact bot protection | Comma-separated frontend hostnames accepted by the API |
 | `CRON_SECRET` | For scheduled cleanup | Authorizes the inactive-profile cleanup endpoint |
 
 Never expose server credentials through variables prefixed with `NEXT_PUBLIC_`. Do not commit `.env.local`.
+
+For contact delivery, verify your sending domain in Resend and set `CONTACT_FROM_EMAIL`
+to an address on that domain (for example, `MoodFlip <no-reply@moodflip.coach>`).
+For production, set `RESEND_API_KEY`, `CONTACT_FROM_EMAIL`, `CONTACT_TO_EMAIL`,
+and `AUTH_FROM_EMAIL` as Cloudflare Worker variables or secrets as appropriate,
+and set them in `.env.local` for local development. The contact form sends to
+`contact@moodflip.coach` by default.
+
+The contact form requires Cloudflare Turnstile. Create a managed widget for the
+production hostname, then configure `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and
+`TURNSTILE_SECRET_KEY`. Use Cloudflare's official test keys only on localhost.
+Set `TURNSTILE_EXPECTED_HOSTNAMES=example.com` with the official always-pass
+test keys because their validation response uses that hostname. In production,
+list only real production hostnames and never include `localhost`, `127.0.0.1`,
+or `example.com`. The contact widget and API also bind the `contact` action so a
+token issued for another form cannot be reused here.
 
 ## Database setup
 

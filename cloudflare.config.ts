@@ -23,13 +23,20 @@ export default defineConfig({
         "https://moodflip.joykonta.workers.dev",
       ),
 
-      CONTACT_FROM_EMAIL: bindings.text("MoodFlip <onboarding@resend.dev>"),
+      CONTACT_FROM_EMAIL: bindings.text(
+        "MoodFlip <no-reply@moodflip.coach>",
+      ),
+      CONTACT_TO_EMAIL: bindings.text("contact@moodflip.coach"),
+      TURNSTILE_EXPECTED_HOSTNAMES: bindings.text(
+        "moodflip.coach,www.moodflip.coach,moodflip.joykonta.workers.dev",
+      ),
       AUTH_FROM_EMAIL: bindings.text(
-        "MoodFlip Security <onboarding@resend.dev>",
+        "MoodFlip Security <no-reply@moodflip.coach>",
       ),
 
       SUPABASE_SERVICE_ROLE_KEY: bindings.secret(),
       RESEND_API_KEY: bindings.secret(),
+      TURNSTILE_SECRET_KEY: bindings.secret(),
     },
   }),
 });

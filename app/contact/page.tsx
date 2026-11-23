@@ -2,11 +2,21 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { notify } from '@/lib/toast';
 
 const MAX_MESSAGE_LENGTH = 500;
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
+
+declare global {
+  interface Window {
+    onMoodFlipTurnstileSuccess?: (token: string) => void;
+    onMoodFlipTurnstileExpired?: () => void;
+    turnstile?: { reset: () => void };
+  }
+}
 
 export default function ContactPage() {
   React.useEffect(() => {
@@ -21,6 +31,16 @@ export default function ContactPage() {
   });
   const [loading, setLoading] = useState(false);
   const [website, setWebsite] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+
+  React.useEffect(() => {
+    window.onMoodFlipTurnstileSuccess = setTurnstileToken;
+    window.onMoodFlipTurnstileExpired = () => setTurnstileToken('');
+    return () => {
+      delete window.onMoodFlipTurnstileSuccess;
+      delete window.onMoodFlipTurnstileExpired;
+    };
+  }, []);
 
   const charsLeft = MAX_MESSAGE_LENGTH - formData.message.length;
 
@@ -35,7 +55,7 @@ export default function ContactPage() {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, website }),
+        body: JSON.stringify({ ...formData, website, turnstileToken }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
@@ -43,8 +63,12 @@ export default function ContactPage() {
       }
       notify.success('Thank you for reaching out. We will respond within 24–48 hours.', { title: 'Message sent' });
       setFormData({ name: '', email: '', subject: '', message: '' });
+      setTurnstileToken('');
+      window.turnstile?.reset();
     } catch (error) {
       notify.error(error instanceof Error ? error.message : 'We could not send your message.', { title: 'Message not sent' });
+      setTurnstileToken('');
+      window.turnstile?.reset();
     } finally {
       setLoading(false);
     }
@@ -52,6 +76,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden bg-[#FDF8F5] text-[#1A143F] font-sans antialiased flex flex-col justify-between selection:bg-[#F4EBF5] selection:text-[#7464AC]">
+      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
       <Header />
 
       <main className="flex-1 flex flex-col max-w-3xl mx-auto px-4 sm:px-6 py-2 sm:py-3 w-full space-y-2">
@@ -91,11 +116,10 @@ export default function ContactPage() {
                 className="absolute h-px w-px overflow-hidden opacity-0 pointer-events-none"
               />
 
-              {/* 2-Column Grid: Left (Name + Email) | Right (Subject + Message) */}
+              {/* Name and e-mail share a row; subject and message each have their own row. */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-                {/* LEFT COLUMN */}
-                <div className="space-y-3">
+                <div>
                   {/* Your Name */}
                   <div>
                     <label className="block text-xs sm:text-sm font-semibold text-[#5C527A] mb-1">
@@ -110,23 +134,20 @@ export default function ContactPage() {
                     />
                   </div>
 
-                  {/* Your E-mail */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-[#5C527A] mb-1">
-                      Your E-mail
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full rounded-xl border border-[#E4DAD7] bg-[#FDF8F5] px-3.5 py-2 text-sm text-[#1A143F] placeholder-[#A49BA8] focus:outline-none focus:ring-2 focus:ring-[#7464AC]/40 focus:border-[#7464AC] transition font-medium"
-                    />
-                  </div>
                 </div>
 
-                {/* RIGHT COLUMN */}
-                <div className="space-y-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-[#5C527A] mb-1">Your E-mail</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full rounded-xl border border-[#E4DAD7] bg-[#FDF8F5] px-3.5 py-2 text-sm text-[#1A143F] placeholder-[#A49BA8] focus:outline-none focus:ring-2 focus:ring-[#7464AC]/40 focus:border-[#7464AC] transition font-medium"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
                   {/* Subject */}
                   <div>
                     <label className="block text-xs sm:text-sm font-semibold text-[#5C527A] mb-1">
@@ -141,7 +162,10 @@ export default function ContactPage() {
                     />
                   </div>
 
-                  {/* Your Message — max 500 chars with live countdown */}
+                </div>
+
+                <div className="sm:col-span-2">
+                  {/* Your Message - max 500 chars with live countdown */}
                   <div>
                     <label className="block text-xs sm:text-sm font-semibold text-[#5C527A] mb-1">
                       Your Message
@@ -162,9 +186,26 @@ export default function ContactPage() {
 
               </div>
 
+              <div className="flex justify-center min-h-[65px]">
+                {TURNSTILE_SITE_KEY ? (
+                  <div
+                    className="cf-turnstile w-full"
+                    data-sitekey={TURNSTILE_SITE_KEY}
+                    data-size="flexible"
+                    data-theme="light"
+                    data-action="contact"
+                    data-callback="onMoodFlipTurnstileSuccess"
+                    data-expired-callback="onMoodFlipTurnstileExpired"
+                    data-error-callback="onMoodFlipTurnstileExpired"
+                  />
+                ) : (
+                  <p className="text-sm text-red-600">Security check is temporarily unavailable.</p>
+                )}
+              </div>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !turnstileToken}
                 className="w-full rounded-full bg-gradient-to-r from-[#7464AC] to-[#4F438B] py-2.5 sm:py-3 text-sm font-extrabold text-white shadow-md shadow-[#4F438B]/20 hover:opacity-95 hover:scale-[1.01] transition-all cursor-pointer disabled:opacity-50"
               >
                 {loading ? 'Sending…' : 'Send Message →'}
