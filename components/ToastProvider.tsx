@@ -26,7 +26,7 @@ const styles: Record<ToastKind, { title: string; card: string; icon: string; tit
     progress: 'bg-amber-500',
   },
   info: {
-    title: 'Information',
+    title: '',
     card: 'border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-white shadow-[0_16px_40px_rgba(79,70,229,0.18)]',
     icon: 'bg-indigo-100 text-indigo-700 ring-indigo-200',
     titleColor: 'text-indigo-950',
@@ -71,13 +71,14 @@ export default function ToastProvider() {
     <div aria-label="Notifications" aria-live="polite" className="pointer-events-none fixed inset-x-4 top-4 z-[9999] flex flex-col items-end gap-3 sm:left-auto sm:right-5 sm:w-[25rem]">
       {messages.map((item) => {
         const appearance = styles[item.kind];
+        const title = item.title ?? appearance.title;
         return (
           <div key={item.id} role={item.kind === 'error' ? 'alert' : 'status'} className={`toast-enter pointer-events-auto relative w-full overflow-hidden rounded-2xl border p-4 pr-11 backdrop-blur-xl ${appearance.card}`}>
             <div className="flex items-start gap-3.5">
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${appearance.icon}`}><ToastIcon kind={item.kind} /></span>
               <div className="min-w-0 pt-0.5">
-                <p className={`text-sm font-extrabold leading-5 ${appearance.titleColor}`}>{item.title ?? appearance.title}</p>
-                <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-600">{item.message}</p>
+                {title && <p className={`text-sm font-extrabold leading-5 ${appearance.titleColor}`}>{title}</p>}
+                <p className={`${title ? 'mt-0.5' : 'mt-2'} text-[13px] font-semibold leading-5 text-slate-600`}>{item.message}</p>
               </div>
             </div>
             <button type="button" aria-label="Dismiss notification" className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-black/5 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-400" onClick={() => dismiss(item.id)}>

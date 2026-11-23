@@ -59,17 +59,30 @@ export default function Header() {
           {loading ? (
             <span className="inline-block h-9 w-24 rounded-full border border-[#E4DAD7] bg-[#F4EBF5]/60 animate-pulse" aria-label="Checking sign-in status" />
           ) : user ? (
-            <button
-              type="button"
-              onClick={() => void handleLogout()}
-              className="inline-flex items-center gap-1.5 px-4 h-9 rounded-full border border-[#7464AC] bg-[#F4EBF5] text-[#4F438B] text-xs md:text-sm font-bold shadow-2xs hover:bg-[#EAE0F5] transition-all whitespace-nowrap"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Logout
-            </button>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href="/profile"
+                aria-current={pathname === '/profile' ? 'page' : undefined}
+                className={`inline-flex items-center gap-1.5 px-4 h-9 rounded-full border text-xs md:text-sm font-bold shadow-2xs transition-all whitespace-nowrap ${
+                  pathname === '/profile'
+                    ? 'border-[#7464AC] bg-[#7464AC] text-white'
+                    : 'border-[#7464AC] bg-[#F4EBF5] text-[#4F438B] hover:bg-[#EAE0F5]'
+                }`}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Profile
+              </Link>
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="inline-flex items-center px-3 h-9 rounded-full text-[#5C527A] text-xs font-bold hover:bg-[#F4EBF5] hover:text-[#4F438B] transition-all whitespace-nowrap"
+              >
+                Logout
+              </button>
+            </div>
           ) : (
             <Link
               href="/login"

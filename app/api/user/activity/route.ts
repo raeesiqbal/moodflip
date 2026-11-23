@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
-const DAILY_MOOD_LIFT_LIMIT = 3;
 const MAX_FIELD_LENGTH = 2_000;
 
 type CheckinRow = {
@@ -101,38 +100,37 @@ export async function POST(request: Request) {
     }
 
     // The server owns the calendar date used for enforcement; a client cannot
-    // bypass the daily limit by submitting a different saved_at value.
+    // bypass the daily limit by submitting a different saved_at value. The RPC
+    // locks this user's date, checks the count, and inserts in one transaction.
     const today = new Date().toISOString().slice(0, 10);
-    const { count, error: countError } = await admin
-      .from('checkins')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('saved_at', today);
-    if (countError) throw countError;
-    if ((count || 0) >= DAILY_MOOD_LIFT_LIMIT) {
+    const { data: atomicResult, error: saveError } = await admin.rpc('save_mood_lift_atomic', {
+      p_user_id: user.id,
+      p_email: user.email,
+      p_mood: mood,
+      p_feeling: feeling,
+      p_target_mood: targetMood,
+      p_action_title: actionTitle,
+      p_action_desc: actionDesc,
+      p_saved_at: today,
+    });
+    if (saveError) throw saveError;
+
+    const saveResult = atomicResult as {
+      limit_reached: boolean;
+      daily_count: number;
+      checkin?: CheckinRow;
+    } | null;
+
+    if (saveResult?.limit_reached) {
       return NextResponse.json(
-        { error: 'You have already saved today’s 3 Mood Lifts.', dailyCount: count },
+        { error: 'You have already saved today’s 3 Mood Lifts.', dailyCount: saveResult.daily_count },
         { status: 409 },
       );
     }
 
-    const { data, error: insertError } = await admin
-      .from('checkins')
-      .insert({
-        user_id: user.id,
-        email: user.email,
-        mood,
-        feeling,
-        target_mood: targetMood,
-        action_title: actionTitle,
-        action_desc: actionDesc,
-        saved_at: today,
-      })
-      .select('id,mood,feeling,target_mood,action_title,action_desc,saved_at,created_at')
-      .single();
-    if (insertError) throw insertError;
+    if (!saveResult?.checkin) throw new Error('The Mood Lift was not returned after saving.');
 
-    const dailyCount = (count || 0) + 1;
+    const dailyCount = saveResult.daily_count;
     const { error: profileError } = await admin
       .from('profiles')
       .update({
@@ -144,7 +142,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      checkin: toMoodLift(data as CheckinRow),
+      checkin: toMoodLift(saveResult.checkin),
       dailyCount,
     });
   } catch (error) {

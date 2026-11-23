@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { notify } from "@/lib/toast";
 import styles from "./HeroSectionExact.module.css";
 import { COUNSELOR_MOODS, CounselorPromptItem } from "@/data/moods";
 import AdBanner from "@/components/AdBanner";
@@ -506,6 +507,34 @@ export default function HeroSectionExact({
   const [progressMsg, setProgressMsg] = useState("");
   const [day2Reminder, setDay2Reminder] = useState<string>("");
 
+  // Keep an open tab aligned with the server's UTC calendar-day boundary.
+  // The save handler also recalculates the date at click time as a fallback
+  // for browsers that throttle timers while a tab or device is inactive.
+  useEffect(() => {
+    let rolloverTimer: ReturnType<typeof setTimeout>;
+
+    const scheduleNextUtcDay = () => {
+      const now = new Date();
+      const nextUtcMidnight = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+      );
+
+      rolloverTimer = setTimeout(() => {
+        const today = new Date().toISOString().split("T")[0];
+        const dailyData = JSON.parse(localStorage.getItem("moodflip_daily_checkins") || "{}");
+        setDailyCheckInCount(Number(dailyData[today]) || 0);
+        setIsSavedForCurrentFlip(false);
+        setSavedMsg("");
+        scheduleNextUtcDay();
+      }, Math.max(nextUtcMidnight - Date.now() + 100, 100));
+    };
+
+    scheduleNextUtcDay();
+    return () => clearTimeout(rolloverTimer);
+  }, []);
+
   // Outcome state that ONLY updates when user clicks "LIFT my MOOD" (or on initial load / reset)
   const [flippedOutcome, setFlippedOutcome] = useState<{
     targetMood: string;
@@ -745,6 +774,19 @@ export default function HeroSectionExact({
     // ── Spec v4: Enforce max 3 saved check-ins per calendar day ──
     const today = new Date().toISOString().split("T")[0];
     const dailyData = JSON.parse(localStorage.getItem("moodflip_daily_checkins") || "{}");
+    const savedCountForToday = Number(dailyData[today]) || 0;
+
+    // Read the count for the date at click time rather than trusting component
+    // state, which may still contain yesterday's 3/3 when a tab crosses UTC
+    // midnight without being refreshed.
+    if (dailyCheckInCount !== savedCountForToday) {
+      setDailyCheckInCount(savedCountForToday);
+    }
+
+    if (savedCountForToday >= 3) {
+      notify.info("You have already saved today’s 3 Mood Lifts.");
+      return;
+    }
 
     setIsSaving(true);
 
@@ -763,6 +805,18 @@ export default function HeroSectionExact({
         })
       });
       const result = await response.json();
+
+      // The server remains authoritative in case this browser's saved count is
+      // stale (for example, when Mood Lifts were saved on another device).
+      if (response.status === 409) {
+        const limitCount = Number(result.dailyCount) || 3;
+        dailyData[today] = limitCount;
+        localStorage.setItem("moodflip_daily_checkins", JSON.stringify(dailyData));
+        setDailyCheckInCount(limitCount);
+        notify.info("You have already saved today’s 3 Mood Lifts.");
+        return;
+      }
+
       if (!response.ok || !result.success || !result.checkin) {
         throw new Error(result.error || "Your Mood Lift could not be saved. Please try again.");
       }
