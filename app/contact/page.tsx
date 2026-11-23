@@ -12,10 +12,86 @@ const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
 declare global {
   interface Window {
-    onMoodFlipTurnstileSuccess?: (token: string) => void;
-    onMoodFlipTurnstileExpired?: () => void;
-    turnstile?: { reset: () => void };
+    turnstile?: {
+      render: (
+        container: HTMLElement,
+        options: {
+          sitekey: string;
+          size: 'flexible';
+          theme: 'light';
+          action: string;
+          callback: (token: string) => void;
+          'expired-callback': () => void;
+          'error-callback': () => void;
+        },
+      ) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
   }
+}
+
+function TurnstileWidget({
+  onTokenChange,
+  resetSignal,
+}: {
+  onTokenChange: (token: string) => void;
+  resetSignal: number;
+}) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const widgetIdRef = React.useRef<string | null>(null);
+
+  const renderWidget = React.useCallback(() => {
+    if (
+      !TURNSTILE_SITE_KEY ||
+      !containerRef.current ||
+      !window.turnstile ||
+      widgetIdRef.current
+    ) {
+      return;
+    }
+
+    widgetIdRef.current = window.turnstile.render(containerRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      size: 'flexible',
+      theme: 'light',
+      action: 'contact',
+      callback: onTokenChange,
+      'expired-callback': () => onTokenChange(''),
+      'error-callback': () => onTokenChange(''),
+    });
+  }, [onTokenChange]);
+
+  React.useEffect(() => {
+    renderWidget();
+    return () => {
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [renderWidget]);
+
+  React.useEffect(() => {
+    if (resetSignal > 0 && widgetIdRef.current && window.turnstile) {
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  }, [resetSignal]);
+
+  if (!TURNSTILE_SITE_KEY) {
+    return <p className="text-sm text-red-600">Security check is temporarily unavailable.</p>;
+  }
+
+  return (
+    <>
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        strategy="afterInteractive"
+        onReady={renderWidget}
+      />
+      <div ref={containerRef} className="w-full" />
+    </>
+  );
 }
 
 export default function ContactPage() {
@@ -32,15 +108,7 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [website, setWebsite] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
-
-  React.useEffect(() => {
-    window.onMoodFlipTurnstileSuccess = setTurnstileToken;
-    window.onMoodFlipTurnstileExpired = () => setTurnstileToken('');
-    return () => {
-      delete window.onMoodFlipTurnstileSuccess;
-      delete window.onMoodFlipTurnstileExpired;
-    };
-  }, []);
+  const [turnstileResetSignal, setTurnstileResetSignal] = useState(0);
 
   const charsLeft = MAX_MESSAGE_LENGTH - formData.message.length;
 
@@ -64,11 +132,11 @@ export default function ContactPage() {
       notify.success('Thank you for reaching out. We will respond within 24–48 hours.', { title: 'Message sent' });
       setFormData({ name: '', email: '', subject: '', message: '' });
       setTurnstileToken('');
-      window.turnstile?.reset();
+      setTurnstileResetSignal((value) => value + 1);
     } catch (error) {
       notify.error(error instanceof Error ? error.message : 'We could not send your message.', { title: 'Message not sent' });
       setTurnstileToken('');
-      window.turnstile?.reset();
+      setTurnstileResetSignal((value) => value + 1);
     } finally {
       setLoading(false);
     }
@@ -76,7 +144,6 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden bg-[#FDF8F5] text-[#1A143F] font-sans antialiased flex flex-col justify-between selection:bg-[#F4EBF5] selection:text-[#7464AC]">
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
       <Header />
 
       <main className="flex-1 flex flex-col max-w-3xl mx-auto px-4 sm:px-6 py-2 sm:py-3 w-full space-y-2">
@@ -187,20 +254,10 @@ export default function ContactPage() {
               </div>
 
               <div className="flex justify-center min-h-[65px]">
-                {TURNSTILE_SITE_KEY ? (
-                  <div
-                    className="cf-turnstile w-full"
-                    data-sitekey={TURNSTILE_SITE_KEY}
-                    data-size="flexible"
-                    data-theme="light"
-                    data-action="contact"
-                    data-callback="onMoodFlipTurnstileSuccess"
-                    data-expired-callback="onMoodFlipTurnstileExpired"
-                    data-error-callback="onMoodFlipTurnstileExpired"
-                  />
-                ) : (
-                  <p className="text-sm text-red-600">Security check is temporarily unavailable.</p>
-                )}
+                <TurnstileWidget
+                  onTokenChange={setTurnstileToken}
+                  resetSignal={turnstileResetSignal}
+                />
               </div>
 
               <button
