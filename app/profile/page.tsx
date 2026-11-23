@@ -210,10 +210,30 @@ function ProfileContent({
   const [userEmail, setUserEmail] = useState(initialEmail);
   const [flipsCount, setFlipsCount] = useState(0);
 
+  useEffect(() => {
+    const syncTabFromUrl = () => {
+      const requestedTab = new URLSearchParams(window.location.search).get('tab');
+      if (requestedTab && TABS.includes(requestedTab as Tab)) {
+        setActiveTab(requestedTab as Tab);
+      } else {
+        setActiveTab('My Mood Lifts');
+      }
+    };
+
+    syncTabFromUrl();
+    window.addEventListener('popstate', syncTabFromUrl);
+    return () => window.removeEventListener('popstate', syncTabFromUrl);
+  }, []);
+
   // Sync count of saved flips
   const handleFlipsCountChange = React.useCallback((count: number) => {
     setFlipsCount(count);
   }, []);
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    router.replace(`/profile?tab=${encodeURIComponent(tab)}`, { scroll: false });
+  };
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -259,7 +279,7 @@ function ProfileContent({
           {TABS.map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`rounded-full px-5 py-2 text-xs sm:text-sm font-semibold transition border cursor-pointer ${
                 activeTab === tab
                   ? 'bg-gradient-to-r from-[#7464AC] to-[#4F438B] text-white border-transparent shadow-xs'
@@ -573,23 +593,54 @@ function My7DayReportTab() {
         Detailed review of your emotional patterns, triggers, and practical action history
       </p>
 
-      <div className="rounded-3xl border border-[#E4DAD7] bg-[#FEFAF8] p-6 sm:p-10 text-center shadow-xs">
-        <div className="text-5xl mb-4">📊</div>
-        <h3 className="text-lg font-bold text-[#4F438B] mb-2">
-          Your Personalised PDF Progress Report
-        </h3>
-        {loading ? (
-          <p role="status" className="text-sm font-semibold text-[#7464AC] mb-5 animate-pulse">
-            Loading report progress…
-          </p>
-        ) : errorMessage ? (
-          <p role="alert" className="text-sm font-semibold text-red-600 mb-5">
-            {errorMessage}
-          </p>
-        ) : (
-          <div className="mb-5">
-            <p className="text-base font-bold text-[#4F438B]">
-              7-Day Report Progress: Day {qualifyingDays} of 7
+      {loading ? (
+        <p role="status" className="mb-7 text-xs font-semibold text-[#7464AC] animate-pulse">
+          Loading report progress…
+        </p>
+      ) : errorMessage ? (
+        <p role="alert" className="mb-7 text-xs font-semibold text-red-600">{errorMessage}</p>
+      ) : (
+        /* Seven qualifying calendar days — visual progress only, not interactive */
+        <div className="mb-7" aria-label={`Seven-day report progress: ${qualifyingDays} of 7 qualifying days`}>
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <p className="font-serif text-xl font-bold text-[#4F438B]">Saved calendar days</p>
+            <p className="shrink-0 font-serif text-xl font-bold text-[#4F438B]">
+              {qualifyingDays} of 7
+            </p>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, index) => {
+              const dayNumber = index + 1;
+              const completed = dayNumber <= qualifyingDays;
+
+              return (
+                <div
+                  key={dayNumber}
+                  className={`flex min-h-16 flex-col items-center justify-center rounded-xl border px-1 py-2 transition-colors sm:min-h-20 ${
+                    completed
+                      ? 'border-[#7464AC] bg-[#F1EBFA] text-[#4F438B]'
+                      : 'border-[#DED5D1] bg-transparent text-[#91879F]'
+                  }`}
+                >
+                  <span
+                    className={`mb-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold sm:h-6 sm:w-6 ${
+                      completed
+                        ? 'bg-[#7464AC] text-white'
+                        : 'bg-[#B9B4BC] text-transparent'
+                    }`}
+                  >
+                    {completed ? '✓' : '•'}
+                  </span>
+                  <span className="text-[10px] font-bold sm:text-xs">D{dayNumber}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-3">
+            <p className={`text-sm font-bold ${progress?.eligible ? 'text-green-700' : 'text-[#4F438B]'}`}>
+              {progress?.eligible ? 'Report eligible' : 'Report not yet eligible'}
             </p>
             <p className="mt-1 text-xs text-gray-500">
               {progress?.eligible
@@ -597,7 +648,14 @@ function My7DayReportTab() {
                 : `${remainingDays} more qualifying ${remainingDays === 1 ? 'day' : 'days'} needed. Days do not need to be consecutive.`}
             </p>
           </div>
-        )}
+        </div>
+      )}
+
+      <div className="rounded-3xl border border-[#E4DAD7] bg-[#FEFAF8] p-6 sm:p-10 text-center shadow-xs">
+        <div className="text-5xl mb-4">📊</div>
+        <h3 className="text-lg font-bold text-[#4F438B] mb-2">
+          Your Personalised PDF Progress Report
+        </h3>
         <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto leading-relaxed">
           Get a comprehensive PDF report of your 7-day mood journey, including your Mood Lifts,
           patterns, and personalised actionable suggestions.
