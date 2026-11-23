@@ -25,9 +25,8 @@ export default defineConfig({
       ),
 
       CONTACT_FROM_EMAIL: bindings.text("MoodFlip <no-reply@moodflip.coach>"),
-      CONTACT_TO_EMAIL: bindings.text("contact@moodflip.coach"),
       TURNSTILE_EXPECTED_HOSTNAMES: bindings.text(
-        "moodflip.coach,www.moodflip.coach,moodflip.joykonta.workers.dev",
+        "moodflip.coach,www.moodflip.coach",
       ),
       AUTH_FROM_EMAIL: bindings.text(
         "MoodFlip Security <no-reply@moodflip.coach>",
