@@ -19,13 +19,9 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_ANON_KEY: bindings.text(
         "sb_publishable_rtuxfFYFRZ5F_eXPuXBk4Q_8COmKHwD",
       ),
-      NEXT_PUBLIC_SITE_URL: bindings.text(
-        "https://moodflip.joykonta.workers.dev",
-      ),
+      NEXT_PUBLIC_SITE_URL: bindings.text("https://moodflip.coach"),
 
-      CONTACT_FROM_EMAIL: bindings.text(
-        "MoodFlip <no-reply@moodflip.coach>",
-      ),
+      CONTACT_FROM_EMAIL: bindings.text("MoodFlip <no-reply@moodflip.coach>"),
       CONTACT_TO_EMAIL: bindings.text("contact@moodflip.coach"),
       TURNSTILE_EXPECTED_HOSTNAMES: bindings.text(
         "moodflip.coach,www.moodflip.coach,moodflip.joykonta.workers.dev",
