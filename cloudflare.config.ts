@@ -20,6 +20,9 @@ export default defineConfig({
         "sb_publishable_rtuxfFYFRZ5F_eXPuXBk4Q_8COmKHwD",
       ),
       NEXT_PUBLIC_SITE_URL: bindings.text("https://moodflip.coach"),
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: bindings.text(
+        "0x4AAAAAAGOmjC1-nGxOcdek",
+      ),
 
       CONTACT_FROM_EMAIL: bindings.text("MoodFlip <no-reply@moodflip.coach>"),
       CONTACT_TO_EMAIL: bindings.text("contact@moodflip.coach"),
