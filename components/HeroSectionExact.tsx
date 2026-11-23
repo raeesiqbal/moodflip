@@ -745,60 +745,42 @@ export default function HeroSectionExact({
     // ── Spec v4: Enforce max 3 saved check-ins per calendar day ──
     const today = new Date().toISOString().split("T")[0];
     const dailyData = JSON.parse(localStorage.getItem("moodflip_daily_checkins") || "{}");
-    const todayCount = dailyData[today] || 0;
-    if (todayCount >= 3) {
-      // Spec §16 Popup #4: Daily save limit reached
-      setSavedMsg("You’ve saved today’s 3 Mood Lifts. You can still use the free MoodFlip tool. You can save more Mood Lifts tomorrow.");
-      setTimeout(() => setSavedMsg(""), 6000);
-      return;
-    }
 
     setIsSaving(true);
 
-    const checkin = {
-      id: Date.now().toString(),
-      date: new Date().toISOString(),
-      timestamp: Date.now(),
-      mood: selectedMood,
-      feeling: `${activeFeeling.name} (${selectedChip})`,
-      targetMood: displayedTransformedMood,
-      action: displayedActionTitle,
-      actionDesc: displayedActionDesc,
-    };
-
     try {
-      // ── Save to localStorage (always works, even offline) ──
-      const existing = JSON.parse(localStorage.getItem("moodflip_checkin_history") || "[]");
-      const updated = [checkin, ...existing.slice(0, 49)];
+      const response = await fetch("/api/user/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          checkin: {
+            mood: selectedMood,
+            feeling: `${activeFeeling.name} (${selectedChip})`,
+            target_mood: displayedTransformedMood,
+            action_title: displayedActionTitle,
+            action_desc: displayedActionDesc,
+          }
+        })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success || !result.checkin) {
+        throw new Error(result.error || "Your Mood Lift could not be saved. Please try again.");
+      }
+
+      // Cache only a database-confirmed record. This keeps reports available
+      // offline without claiming that an unsuccessful server request was saved.
+      const existingRaw = JSON.parse(localStorage.getItem("moodflip_checkin_history") || "[]");
+      const existing = Array.isArray(existingRaw) ? existingRaw : [];
+      const updated = [
+        result.checkin,
+        ...existing.filter((item: { id?: string }) => item.id !== result.checkin.id),
+      ].slice(0, 100);
       localStorage.setItem("moodflip_checkin_history", JSON.stringify(updated));
 
-      // Update daily count
-      const newCount = todayCount + 1;
+      const newCount = Number(result.dailyCount) || 1;
       dailyData[today] = newCount;
       localStorage.setItem("moodflip_daily_checkins", JSON.stringify(dailyData));
       setDailyCheckInCount(newCount);
-
-      // ── Also save to Supabase if user email is stored ──
-      if (session) {
-        try {
-          await fetch("/api/user/activity", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-            body: JSON.stringify({
-              checkin: {
-                mood: selectedMood,
-                feeling: `${activeFeeling.name} (${selectedChip})`,
-                target_mood: displayedTransformedMood,
-                action_title: displayedActionTitle,
-                action_desc: displayedActionDesc,
-                saved_at: today,
-              }
-            })
-          });
-        } catch {
-          // Supabase save failed silently — localStorage already saved
-        }
-      }
 
       // ── Spec §16: 7-Day Report Progress Messages ──
       const savedDays = new Set<string>(
@@ -821,10 +803,10 @@ export default function HeroSectionExact({
       setProgressMsg(progressNote);
       setIsSavedForCurrentFlip(true);
       setTimeout(() => setSavedMsg(""), 7000);
-    } catch (e) {
-      setSavedMsg("Saved locally!");
-      setIsSavedForCurrentFlip(true);
-      setTimeout(() => setSavedMsg(""), 3000);
+    } catch (error) {
+      setSavedMsg(error instanceof Error ? error.message : "Your Mood Lift could not be saved. Please try again.");
+      setIsSavedForCurrentFlip(false);
+      setTimeout(() => setSavedMsg(""), 6000);
     } finally {
       setIsSaving(false);
     }

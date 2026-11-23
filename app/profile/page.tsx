@@ -17,6 +17,7 @@ interface SavedMoodFlip {
   id: string;
   date: string;
   timestamp?: number;
+  savedAt?: string;
   mood: string;
   feeling: string;
   targetMood: string;
@@ -203,9 +204,9 @@ function ProfileContent({
   const [flipsCount, setFlipsCount] = useState(0);
 
   // Sync count of saved flips
-  const handleFlipsCountChange = (count: number) => {
+  const handleFlipsCountChange = React.useCallback((count: number) => {
     setFlipsCount(count);
-  };
+  }, []);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -305,32 +306,78 @@ function ProfileContent({
 function MyMoodFlipsTab({ onCountChange }: { onCountChange: (count: number) => void }) {
   const [flips, setFlips] = useState<SavedMoodFlip[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadWarning, setLoadWarning] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        const historyRaw = localStorage.getItem('moodflip_checkin_history');
-        if (historyRaw) {
-          const parsed = JSON.parse(historyRaw);
-          if (Array.isArray(parsed)) {
-            setFlips(parsed);
-            onCountChange(parsed.length);
-          }
+    let active = true;
+
+    const loadMoodLifts = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Your session has expired. Please sign in again.');
+
+        const response = await fetch('/api/user/activity', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success || !Array.isArray(result.checkins)) {
+          throw new Error(result.error || 'Unable to load saved Mood Lifts.');
         }
+
+        if (!active) return;
+        const databaseFlips = result.checkins as SavedMoodFlip[];
+        setFlips(databaseFlips);
+        onCountChange(databaseFlips.length);
+        localStorage.setItem('moodflip_checkin_history', JSON.stringify(databaseFlips));
+      } catch (error) {
+        if (!active) return;
+        console.error('Error loading Mood Lifts from database:', error);
+        try {
+          const cached = JSON.parse(localStorage.getItem('moodflip_checkin_history') || '[]');
+          const cachedFlips = Array.isArray(cached) ? cached : [];
+          setFlips(cachedFlips);
+          onCountChange(cachedFlips.length);
+          setLoadWarning('Database connection unavailable. Showing the last saved device cache.');
+        } catch {
+          setFlips([]);
+          onCountChange(0);
+          setLoadWarning('Saved Mood Lifts could not be loaded. Please refresh and try again.');
+        }
+      } finally {
+        if (active) setLoaded(true);
       }
-    } catch (e) {
-      console.error('Error loading checkin history:', e);
-    } finally {
-      setLoaded(true);
-    }
+    };
+
+    void loadMoodLifts();
+    return () => { active = false; };
   }, [onCountChange]);
 
-  const handleDeleteFlip = (id: string) => {
-    const updated = flips.filter((f) => f.id !== id);
-    setFlips(updated);
-    onCountChange(updated.length);
-    if (typeof window !== 'undefined') {
+  const handleDeleteFlip = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Your session has expired. Please sign in again.');
+
+      const response = await fetch(`/api/user/activity?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Unable to delete Mood Lift.');
+      }
+
+      const updated = flips.filter((flip) => flip.id !== id);
+      setFlips(updated);
+      onCountChange(updated.length);
       localStorage.setItem('moodflip_checkin_history', JSON.stringify(updated));
+      notify.success('The Mood Lift was removed from your profile.');
+    } catch (error) {
+      notify.error(error instanceof Error ? error.message : 'Unable to delete Mood Lift.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -360,6 +407,11 @@ function MyMoodFlipsTab({ onCountChange }: { onCountChange: (count: number) => v
 
   return (
     <section>
+      {loadWarning && (
+        <div role="status" className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          {loadWarning}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-xl font-bold text-[#4F438B]">Saved Mood Lifts</h2>
@@ -421,11 +473,12 @@ function MyMoodFlipsTab({ onCountChange }: { onCountChange: (count: number) => v
                 <button
                   type="button"
                   onClick={() => handleDeleteFlip(flip.id)}
-                  className="self-start text-xs text-gray-400 hover:text-red-500 transition px-2 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
+                  disabled={deletingId === flip.id}
+                  className="self-start text-xs text-gray-400 hover:text-red-500 transition px-2 py-1 rounded-lg hover:bg-red-50 cursor-pointer disabled:cursor-wait disabled:opacity-50"
                   title="Remove from saved"
                   aria-label="Remove Mood Flip"
                 >
-                  ✕ Remove
+                  {deletingId === flip.id ? 'Removing…' : '✕ Remove'}
                 </button>
               </div>
 
@@ -447,7 +500,7 @@ function MyMoodFlipsTab({ onCountChange }: { onCountChange: (count: number) => v
                     <span className="text-[11px] text-green-700 font-semibold flex items-center gap-1.5">
                       <span>✓</span> Saved in Profile
                     </span>
-                    <span className="text-[11px] text-gray-400">Synced to device</span>
+                    <span className="text-[11px] text-gray-400">Synced with database</span>
                   </div>
                 </div>
               )}
