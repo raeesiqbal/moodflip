@@ -496,7 +496,8 @@ export default function HeroSectionExact({
   const [isFlipping, setIsFlipping] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [savedMsg, setSavedMsg] = useState("");
+  const [saveModalMessage, setSaveModalMessage] = useState("");
+  const [saveModalLinksToReport, setSaveModalLinksToReport] = useState(false);
   const [hasFlipped, setHasFlipped] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavedForCurrentFlip, setIsSavedForCurrentFlip] = useState(false);
@@ -507,6 +508,25 @@ export default function HeroSectionExact({
   const [showSecondVisitPopup, setShowSecondVisitPopup] = useState(false);
   const [dailyCheckInCount, setDailyCheckInCount] = useState(0);
   const [day2Reminder, setDay2Reminder] = useState<string>("");
+  const saveModalCloseRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!saveModalMessage) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSaveModalMessage("");
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleEscape);
+    saveModalCloseRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [saveModalMessage]);
 
   // Keep an open tab aligned with the server's UTC calendar-day boundary.
   // The save handler also recalculates the date at click time as a fallback
@@ -527,13 +547,63 @@ export default function HeroSectionExact({
         const dailyData = JSON.parse(localStorage.getItem("moodflip_daily_checkins") || "{}");
         setDailyCheckInCount(Number(dailyData[today]) || 0);
         setIsSavedForCurrentFlip(false);
-        setSavedMsg("");
+        setSaveModalMessage("");
         scheduleNextUtcDay();
       }, Math.max(nextUtcMidnight - Date.now() + 100, 100));
     };
 
     scheduleNextUtcDay();
     return () => clearTimeout(rolloverTimer);
+  }, []);
+
+  // Synchronize today's saved count and history from the database whenever the
+  // page loads or the authenticated session changes. Local storage is only a
+  // cache and must not remain authoritative after a database-side deletion.
+  useEffect(() => {
+    let active = true;
+
+    const syncSavedMoodLifts = async (accessToken?: string) => {
+      if (!accessToken) {
+        if (active) setDailyCheckInCount(0);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/user/activity", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store",
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success || !result.reportProgress || !Array.isArray(result.checkins)) {
+          throw new Error(result.error || "Unable to refresh saved Mood Lifts.");
+        }
+
+        if (!active) return;
+        const today = new Date().toISOString().split("T")[0];
+        const databaseDailyCount = Number(result.reportProgress.dailyCount) || 0;
+        const dailyData = JSON.parse(localStorage.getItem("moodflip_daily_checkins") || "{}");
+        dailyData[today] = databaseDailyCount;
+        localStorage.setItem("moodflip_daily_checkins", JSON.stringify(dailyData));
+        localStorage.setItem("moodflip_checkin_history", JSON.stringify(result.checkins));
+        setDailyCheckInCount(databaseDailyCount);
+      } catch (error) {
+        console.error("Unable to synchronize saved Mood Lifts from the database:", error);
+        if (active) setDailyCheckInCount(0);
+      }
+    };
+
+    void supabase.auth.getSession().then(({ data }) => {
+      void syncSavedMoodLifts(data.session?.access_token);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      void syncSavedMoodLifts(session?.access_token);
+    });
+
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   // Outcome state that ONLY updates when user clicks "LIFT my MOOD" (or on initial load / reset)
@@ -638,11 +708,6 @@ export default function HeroSectionExact({
       const visitCount = visitCountRaw ? parseInt(visitCountRaw, 10) : 0;
       localStorage.setItem('moodflip_site_visit_count', String(visitCount + 1));
       setShowSecondVisitPopup(false);
-
-      // ── #21: Load today's check-in count ──
-      const today = new Date().toISOString().split("T")[0];
-      const dailyData = JSON.parse(localStorage.getItem("moodflip_daily_checkins") || "{}");
-      setDailyCheckInCount(dailyData[today] || 0);
 
       // ── Section 8: Load saved action rotation indexes ──
       try {
@@ -809,8 +874,11 @@ export default function HeroSectionExact({
 
       // The backend derives both values from saved database records. Multiple
       // Mood Lifts on one date therefore advance the daily count but not days.
-      const daysSaved = Math.min(Number(result.reportProgress.qualifyingDays) || 0, 7);
+      const qualifyingDays = Number(result.reportProgress.qualifyingDays) || 0;
+      const daysSaved = Math.min(qualifyingDays, 7);
       const totalSaved = Number(result.reportProgress.totalCount) || 0;
+      const reachedSixDayMilestone = qualifyingDays === 6 && newCount === 1;
+      const reachedSevenDayMilestone = qualifyingDays === 7 && newCount === 1;
 
       // Spec §16 Popup #3: Progress message after saving a Mood Flip
       let progressNote = `Saved.\n\nToday's Mood Lifts: [${newCount}/3]\n\n7-Day Report progress: Day [${daysSaved}] of 7`;
@@ -818,22 +886,32 @@ export default function HeroSectionExact({
       if (totalSaved === 1) {
         // Spec §16 Popup #1: After first saved Mood Flipping
         progressNote = "Your first Mood Lift is saved.\n\nYou can save up to 3 Mood Lifts per day. After 7 days, you’ll be able to download your personalised 7-Day MoodFlip Report.";
-      } else if (daysSaved >= 7) {
+      } else if (reachedSixDayMilestone) {
+        progressNote = "You’re almost there — 6 of 7 qualifying days complete.\n\nTo unlock your report, save at least one Mood Lift on one more calendar day. Extra saves today won’t add another qualifying day. Days do not need to be consecutive.";
+      } else if (reachedSevenDayMilestone) {
         // Spec §16 Popup #5: 7-day report ready
         progressNote = "Your 7-Day MoodFlip Report is ready.\n\nDownload your personalised report with your saved moods, positive moods, 60-second actions, and mood pattern summary.";
-      } else if (result.showDailyReminder) {
+      } else if (result.showDailyReminder && qualifyingDays < 6) {
         // The specification leaves the trigger open. Show this only after a
         // successful save. The backend claims it once per user and UTC day.
         setDay2Reminder("You're building your 7-Day MoodFlip Report. Save up to 3 Mood Lifts per day. Your personalized report will be available after 7 days for US$7.");
       }
 
-      setSavedMsg(progressNote);
+      const shouldShowSaveModal = totalSaved === 1 || reachedSixDayMilestone || reachedSevenDayMilestone;
+
+      if (shouldShowSaveModal) {
+        setSaveModalMessage(progressNote);
+        setSaveModalLinksToReport(reachedSevenDayMilestone);
+        notify.success("Your Mood Lift has been saved successfully.");
+      } else {
+        setSaveModalMessage("");
+        setSaveModalLinksToReport(false);
+        notify.success(progressNote.replace(/\n+/g, " "), { duration: 7000 });
+      }
       setIsSavedForCurrentFlip(true);
-      setTimeout(() => setSavedMsg(""), 7000);
     } catch (error) {
-      setSavedMsg(error instanceof Error ? error.message : "Your Mood Lift could not be saved. Please try again.");
+      notify.error(error instanceof Error ? error.message : "Your Mood Lift could not be saved. Please try again.");
       setIsSavedForCurrentFlip(false);
-      setTimeout(() => setSavedMsg(""), 6000);
     } finally {
       setIsSaving(false);
     }
@@ -847,7 +925,6 @@ export default function HeroSectionExact({
     setIsFlipping(true);
     setTimerSeconds(60);
     setIsTimerRunning(false);
-    setSavedMsg(""); // Clear previous save message on new flip
 
     // Get current mood identifier and rotating action from live Counselor library
     const currentMoodKey = matchedLibraryMood?.id || activeFeeling.id || selectedMood;
@@ -1280,22 +1357,6 @@ export default function HeroSectionExact({
                   )}
                 </button>
 
-                {savedMsg && (
-                  <div style={{
-                    fontSize: 11.5,
-                    color: "#5A4A7A",
-                    textAlign: "center",
-                    maxWidth: 280,
-                    lineHeight: 1.4,
-                    fontWeight: 600,
-                    whiteSpace: "pre-line",
-                    background: "rgba(116,100,172,0.08)",
-                    padding: "6px 12px",
-                    borderRadius: 12,
-                  }}>
-                    ✅ {savedMsg}
-                  </div>
-                )}
                 <div style={{ fontSize: 10.5, color: "#8C7EA5", textAlign: "center", maxWidth: 220, fontWeight: 600 }}>
                   {dailyCheckInCount}/3 Mood Lifts saved today
                 </div>
@@ -1443,6 +1504,78 @@ export default function HeroSectionExact({
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MOOD LIFT SAVE CONFIRMATION MODAL ── */}
+      {saveModalMessage && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mood-lift-save-modal-title"
+          style={{
+            position: "fixed", inset: 0, zIndex: 9500,
+            background: "rgba(30, 20, 50, 0.55)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 20,
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setSaveModalMessage("");
+          }}
+        >
+          <div style={{
+            background: "#FEFAF8",
+            borderRadius: 24,
+            padding: "34px 28px 28px",
+            maxWidth: 440,
+            width: "100%",
+            textAlign: "center",
+            boxShadow: "0 16px 48px rgba(79, 67, 139, 0.25)",
+            border: "1px solid #E4DAD7",
+            position: "relative",
+          }}>
+            <button
+              ref={saveModalCloseRef}
+              type="button"
+              onClick={() => setSaveModalMessage("")}
+              style={{ position: "absolute", top: 14, right: 17, background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#A49BA8", padding: 4 }}
+              aria-label="Close save confirmation"
+            >×</button>
+            <div
+              aria-hidden="true"
+              style={{
+                width: 52, height: 52, borderRadius: "50%", margin: "0 auto 14px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "#E7F5EC", color: "#33845B", fontSize: 27, fontWeight: 800,
+              }}
+            >✓</div>
+            <h2 id="mood-lift-save-modal-title" style={{ fontSize: 22, fontWeight: 800, color: "#4F438B", marginBottom: 12, fontFamily: "serif" }}>
+              Mood Lift saved
+            </h2>
+            <p style={{ fontSize: 14, color: "#5C527A", lineHeight: 1.65, marginBottom: 24, whiteSpace: "pre-line" }}>
+              {saveModalMessage}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (saveModalLinksToReport) {
+                  window.location.assign("/profile?tab=My%207-Day%20Report");
+                  return;
+                }
+                setSaveModalMessage("");
+              }}
+              style={{
+                width: "100%",
+                background: "linear-gradient(135deg, #7464AC 0%, #4F438B 100%)",
+                color: "#fff", borderRadius: 14, padding: "12px 24px",
+                border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer",
+                boxShadow: "0 4px 14px rgba(116,100,172,0.3)",
+              }}
+            >
+              {saveModalLinksToReport ? "Download report" : "Got it"}
+            </button>
           </div>
         </div>
       )}
