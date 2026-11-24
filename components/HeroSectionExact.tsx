@@ -1439,11 +1439,6 @@ export default function HeroSectionExact({
         </div>
       </div>
 
-      {/* ── DISCREET COPYRIGHT NOTICE (Spec §17 & §23 compliant, zero clutter) ── */}
-      <div style={{ textAlign: "center", fontSize: "11px", color: "#A899C0", marginTop: "2px", paddingBottom: "2px", flexShrink: 0 }}>
-        © 2026 MoodFlip. All rights reserved. · Self-Help Tool · Not therapy or medical advice
-      </div>
-
       {/* ── ADMIN-CONTROLLED PROFILE INVITATION POPUP ── */}
       {showSecondVisitPopup && popupSettings.enabled && (
         <div

@@ -109,7 +109,6 @@ export default function ResetPasswordPage() {
             <>
               <div className="text-center mb-6">
                 <h1 className="font-serif text-2xl font-extrabold">Choose a new password</h1>
-                <p className="mt-2 text-xs font-medium text-[#5C527A]">Use at least 8 characters for your new password.</p>
               </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <AuthPasswordFields

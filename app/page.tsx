@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import HeroSectionExact from '@/components/HeroSectionExact';
 import styles from './page.module.css';
 
@@ -64,6 +65,8 @@ export default function HomePage() {
         </section>
 
       </main>
+
+      <Footer />
     </div>
   );
 }

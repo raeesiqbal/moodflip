@@ -124,9 +124,8 @@ export default function AuthPasswordFields({
         </div>
         <p className="mt-1 text-[10px] text-[#5C527A]">At least 8 characters.</p>
         {password && (
-          <div className="flex items-center gap-2 mt-1 text-[10px] text-[#5C527A]" aria-live="polite">
-            <span>Strength: {strengthLabels[strength]}</span>
-            <div className="flex-1 flex gap-1 h-1" aria-hidden="true">
+          <div className="mt-1 text-[10px] text-[#5C527A]" aria-live="polite">
+            <div className="flex w-full gap-1 h-1" aria-hidden="true">
               {[1, 2, 3, 4].map((level) => (
                 <div
                   key={level}
@@ -139,6 +138,7 @@ export default function AuthPasswordFields({
                 />
               ))}
             </div>
+            <p className="mt-1">Strength: {strengthLabels[strength]}</p>
           </div>
         )}
       </div>
