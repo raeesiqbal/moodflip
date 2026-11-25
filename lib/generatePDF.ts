@@ -1448,6 +1448,7 @@ export interface SevenDayReportData {
   savedDayCount: number;
   moodLiftCount: number;
   days: ReportDayGroup[];
+  patternSummary?: string;
 }
 
 export const DEFAULT_7DAY_REPORT_DATA: SevenDayReportData = {
@@ -1566,6 +1567,7 @@ export const DEFAULT_7DAY_REPORT_DATA: SevenDayReportData = {
 };
 
 export function generate7DayReportPDF(customData?: Partial<SevenDayReportData>): jsPDF {
+  if (customData?.days) return generatePurchased7DayReportPDF(customData as SevenDayReportData);
   const data: SevenDayReportData = {
     ...DEFAULT_7DAY_REPORT_DATA,
     ...customData,
@@ -1751,6 +1753,101 @@ export function generate7DayReportPDF(customData?: Partial<SevenDayReportData>):
     doc.text(`Confidential • Created for ${esc(data.fullName)}`, pageWidth - margin, pageHeight - 32, { align: 'right' });
   });
 
+  return doc;
+}
+
+// Paid reports use the same branded report structure as the original three-page
+// sample, with measured page breaks for the full 7–21 saved Mood Lifts.
+function generatePurchased7DayReportPDF(data: SevenDayReportData): jsPDF {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const width = doc.internal.pageSize.getWidth();
+  const height = doc.internal.pageSize.getHeight();
+  const margin = 48;
+  const contentWidth = width - margin * 2;
+  let y = 0;
+
+  const pageHeader = () => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(116, 100, 172);
+    doc.text('MoodFlip | Self-Help Tool', margin, 42);
+    doc.setDrawColor(230, 222, 235);
+    doc.line(margin, 48, width - margin, 48);
+    doc.setFontSize(11);
+    doc.text(esc(data.fullName), margin, 70);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(79, 67, 139);
+    doc.text('Your 7-day report', margin, 93);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10.5);
+    doc.setTextColor(26, 20, 63);
+    doc.text(`${esc(data.startDate)} - ${esc(data.endDate)}`, margin, 112);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(116, 100, 172);
+    doc.text(`${data.savedDayCount} saved days | ${data.moodLiftCount} mood lifts`, margin, 130);
+    doc.setDrawColor(228, 218, 215);
+    doc.line(margin, 140, width - margin, 140);
+    y = 163;
+  };
+  const ensure = (needed: number) => {
+    if (y + needed <= height - 58) return;
+    doc.addPage();
+    pageHeader();
+  };
+  const section = (label: string, value: string) => {
+    const lines = doc.splitTextToSize(esc(value), contentWidth - 24) as string[];
+    ensure(17 + lines.length * 13);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(108, 84, 132);
+    doc.text(label, margin + 10, y);
+    y += 14;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(26, 20, 63);
+    doc.text(lines, margin + 10, y);
+    y += lines.length * 13 + 9;
+  };
+
+  pageHeader();
+  if (data.patternSummary) section('Your mood pattern:', data.patternSummary);
+  for (const day of data.days) {
+    ensure(34);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(26, 20, 63);
+    doc.text(esc(day.date), margin, y);
+    doc.setFontSize(10.5);
+    doc.setTextColor(116, 100, 172);
+    doc.text(`Day ${day.dayNumber} of ${data.savedDayCount}`, width - margin, y, { align: 'right' });
+    y += 23;
+    for (const [index, lift] of day.moodLifts.entries()) {
+      ensure(32);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(79, 67, 139);
+      doc.text(`Mood lift ${index + 1}`, margin + 10, y);
+      y += 17;
+      section('You chose:', `${lift.moodFamily} / ${lift.feeling}`);
+      section('Your positive mood:', lift.positiveMood);
+      if (lift.savedAt) section('Saved at (UTC):', lift.savedAt);
+      section('60-second Mood Boost:', lift.actionText);
+      ensure(10);
+      doc.setDrawColor(228, 218, 215);
+      doc.line(margin, y, width - margin, y);
+      y += 18;
+    }
+  }
+  const pages = doc.internal.getNumberOfPages();
+  for (let page = 1; page <= pages; page++) {
+    doc.setPage(page);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(164, 155, 168);
+    doc.text(`MoodFlip Self-Help Tool | https://www.moodflip.coach`, margin, height - 32);
+    doc.text(`${page} / ${pages}`, width - margin, 42, { align: 'right' });
+  }
   return doc;
 }
 

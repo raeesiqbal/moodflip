@@ -54,6 +54,7 @@ export async function GET(request: Request) {
   }
   return NextResponse.json({ success: true, orderNumber: purchase.order_number,
     paymentStatus: purchase.payment_status, deliveryStatus,
+    reportId: purchase.payment_status === 'succeeded' ? purchase.report_id : null,
     providerStatus, canResume, canRestart,
     amount: purchase.amount_minor === null ? null : purchase.amount_minor / 10 ** (purchase.currency_decimals || 0),
     currency: purchase.currency,

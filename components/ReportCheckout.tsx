@@ -17,7 +17,8 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
   const [loadingPricing, setLoadingPricing] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; providerStatus?: string | null; canResume?: boolean; canRestart?: boolean; orderNumber?: string; currency?: ReportCurrency } | null>(null);
+  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; deliveryStatus?: string; reportId?: string | null; providerStatus?: string | null; canResume?: boolean; canRestart?: boolean; orderNumber?: string; currency?: ReportCurrency } | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -95,6 +96,37 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
     }
   };
 
+  const downloadReport = async () => {
+    if (!previousPayment?.reportId || downloading) return;
+    setDownloading(true);
+    setErrorMessage('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Your session has expired. Please sign in again.');
+      const response = await fetch(`/api/reports/${encodeURIComponent(previousPayment.reportId)}/download`, {
+        headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store',
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        throw new Error(result?.error || 'Unable to download your report.');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'MoodFlip-7-Day-Report.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      setPreviousPayment((current) => current ? { ...current, deliveryStatus: 'delivered' } : current);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to download your report.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <>
       <div className="inline-block rounded-2xl border border-[#E4DAD7] bg-white p-6 text-left w-full max-w-sm mx-auto mb-6 shadow-2xs">
@@ -124,7 +156,27 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
       </div>
 
       {eligible && previousPayment?.paymentStatus === 'succeeded' ? (
-        <p className="text-sm font-semibold text-[#4F438B]">Payment confirmed. Your report is being prepared.</p>
+        <div className="text-sm font-semibold text-[#4F438B]">
+          {previousPayment.deliveryStatus === 'delivered' ? (
+            <p>Your report download was delivered. Your purchase remains confirmed.</p>
+          ) : previousPayment.deliveryStatus === 'failed' ? (
+            <div>
+              <p>We could not prepare your report. Your payment remains valid and you will not be charged again.</p>
+              <p className="mt-2">Please contact <a className="underline" href="mailto:contact@moodflip.coach">contact@moodflip.coach</a> for help.</p>
+              <button type="button" disabled={downloading} onClick={() => void downloadReport()} className="mt-4 rounded-full bg-[#4F438B] px-7 py-3 text-white disabled:opacity-60">Retry download</button>
+            </div>
+          ) : previousPayment.deliveryStatus === 'processing' ? (
+            <div>
+              <p>Your report is being prepared. If the download was interrupted, you can retry after a few minutes.</p>
+              <button type="button" disabled={downloading} onClick={() => void downloadReport()} className="mt-4 rounded-full bg-[#4F438B] px-7 py-3 text-white disabled:opacity-60">Retry download</button>
+            </div>
+          ) : previousPayment.reportId ? (
+            <div>
+              <p>Your payment is confirmed. Your personalised report is ready for its initial download.</p>
+              <button type="button" disabled={downloading} onClick={() => void downloadReport()} className="mt-4 rounded-full bg-[#4F438B] px-7 py-3 text-white disabled:opacity-60">{downloading ? 'Preparing report…' : 'Download report'}</button>
+            </div>
+          ) : <p>Payment confirmed. Your report is being prepared.</p>}
+        </div>
       ) : eligible && ['pending', 'processing'].includes(previousPayment?.paymentStatus || '') ? (
         <div className="text-sm font-semibold text-[#4F438B]">
           <p>{previousPayment?.canResume
