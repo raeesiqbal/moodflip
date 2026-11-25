@@ -12,7 +12,7 @@ AIRWALLEX_BASE_URL=https://api.sandbox.airwallex.com
 AIRWALLEX_CLIENT_ID=your-sandbox-client-id
 AIRWALLEX_API_KEY=your-sandbox-api-key
 AIRWALLEX_ACCOUNT_ID=
-NEXT_PUBLIC_AIRWALLEX_ENV=sandbox
+NEXT_PUBLIC_AIRWALLEX_ENV=demo
 
 # Airwallex hosted checkout requires HTTPS. Use an HTTPS staging deployment or
 # the current public URL from a Cloudflare Tunnel while testing locally.

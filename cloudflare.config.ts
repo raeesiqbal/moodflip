@@ -20,7 +20,7 @@ export default defineConfig({
         "sb_publishable_rtuxfFYFRZ5F_eXPuXBk4Q_8COmKHwD",
       ),
       NEXT_PUBLIC_SITE_URL: bindings.text("https://moodflip.coach"),
-      NEXT_PUBLIC_AIRWALLEX_ENV: bindings.text("sandbox"),
+      NEXT_PUBLIC_AIRWALLEX_ENV: bindings.text("demo"),
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: bindings.text(
         "0x4AAAAAAGOmjC1-nGxOcdek",
       ),
@@ -45,6 +45,7 @@ export default defineConfig({
       AIRWALLEX_CLIENT_ID: bindings.secret(),
       AIRWALLEX_API_KEY: bindings.secret(),
       AIRWALLEX_ACCOUNT_ID: bindings.secret(),
+      AIRWALLEX_WEBHOOK_SECRET: bindings.secret(),
     },
   }),
 });
