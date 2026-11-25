@@ -17,7 +17,7 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
   const [loadingPricing, setLoadingPricing] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; orderNumber?: string } | null>(null);
+  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; providerStatus?: string | null; canResume?: boolean; canRestart?: boolean; orderNumber?: string; currency?: ReportCurrency } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -46,7 +46,10 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
     void supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
       const response = await fetch('/api/payments/status', { headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store' });
-      if (response.ok && active) setPreviousPayment(await response.json());
+      if (response.ok) {
+        const result = await response.json();
+        if (active) setPreviousPayment(result);
+      }
     }).catch(() => {});
     return () => { active = false; };
   }, [eligible]);
@@ -56,7 +59,7 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
     [currency, pricing],
   );
 
-  const startPayment = async () => {
+  const startPayment = async (paymentCurrency: ReportCurrency = currency) => {
     if (submitting || !selectedPrice) return;
     setSubmitting(true);
     setErrorMessage('');
@@ -70,7 +73,7 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
           Authorization: `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ currency, reportType: '7_day' }),
+        body: JSON.stringify({ currency: paymentCurrency, reportType: '7_day' }),
       });
       const result = await response.json() as CheckoutSuccessResponse | CheckoutErrorResponse;
       if (!response.ok || !('success' in result) || result.success !== true) {
@@ -123,9 +126,19 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
       {eligible && previousPayment?.paymentStatus === 'succeeded' ? (
         <p className="text-sm font-semibold text-[#4F438B]">Payment confirmed. Your report is being prepared.</p>
       ) : eligible && ['pending', 'processing'].includes(previousPayment?.paymentStatus || '') ? (
-        <p className="text-sm font-semibold text-[#4F438B]">Your earlier payment is being verified. Please wait before starting another checkout.
-          {previousPayment?.orderNumber && <a className="ml-1 underline" href={`/checkout/result?order=${encodeURIComponent(previousPayment.orderNumber)}`}>Check status</a>}
-        </p>
+        <div className="text-sm font-semibold text-[#4F438B]">
+          <p>{previousPayment?.canResume
+            ? 'Your previous checkout was not completed. You can continue securely with the same order.'
+            : previousPayment?.canRestart ? 'Your previous checkout is no longer active. You can start a new secure checkout.'
+            : 'Your earlier payment is still being checked. Please wait before starting another checkout.'}</p>
+          {(previousPayment?.canResume || previousPayment?.canRestart) && previousPayment.currency && (
+            <button type="button" disabled={submitting} onClick={() => void startPayment(previousPayment.currency)}
+              className="mt-4 rounded-full bg-gradient-to-r from-[#7464AC] to-[#4F438B] px-7 py-3 text-white disabled:opacity-60">
+              {submitting ? 'Opening secure checkout…' : previousPayment.canResume ? 'Resume checkout' : 'Start new checkout'}
+            </button>
+          )}
+          {previousPayment?.orderNumber && <a className="mt-3 block underline" href={`/checkout/result?order=${encodeURIComponent(previousPayment.orderNumber)}`}>Check payment status</a>}
+        </div>
       ) : eligible ? (
         <div>
           <p className="text-sm font-bold text-[#4F438B] mb-4 max-w-lg mx-auto leading-relaxed">

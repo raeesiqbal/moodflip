@@ -6,7 +6,7 @@ import PaymentResult from '@/components/PaymentResult';
 export default async function CheckoutResultPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string | string[] }>;
+  searchParams: Promise<{ order?: string | string[]; returned?: string | string[] }>;
 }) {
   const params = await searchParams;
   const rawOrder = typeof params.order === 'string' ? params.order : '';
@@ -20,7 +20,7 @@ export default async function CheckoutResultPage({
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#F1EBFA] text-2xl" aria-hidden="true">
             ⏳
           </div>
-          <PaymentResult order={order} />
+          <PaymentResult order={order} returnedBack={params.returned === 'back'} />
           {order && (
             <p className="mt-5 text-xs text-gray-500">
               Order reference: <span className="font-semibold text-[#4F438B]">{order}</span>

@@ -112,8 +112,9 @@ function checkoutUrls(orderNumber: string) {
   const appUrl = trustedApplicationUrl();
   const successUrl = new URL('/checkout/result', appUrl);
   successUrl.searchParams.set('order', orderNumber);
-  const cancelUrl = new URL('/profile', appUrl);
-  cancelUrl.searchParams.set('tab', 'My 7-Day Report');
+  const cancelUrl = new URL('/checkout/result', appUrl);
+  cancelUrl.searchParams.set('order', orderNumber);
+  cancelUrl.searchParams.set('returned', 'back');
   return {
     appUrl: appUrl.toString(),
     successUrl: successUrl.toString(),

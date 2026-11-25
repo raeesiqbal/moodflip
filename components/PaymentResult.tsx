@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-type Status = { paymentStatus: string; deliveryStatus: string; amount: number | null; currency: string | null; orderNumber: string };
+type Status = { paymentStatus: string; providerStatus: string | null; canResume: boolean; canRestart: boolean; deliveryStatus: string; amount: number | null; currency: string | null; orderNumber: string };
 
-export default function PaymentResult({ order }: { order: string | null }) {
+export default function PaymentResult({ order, returnedBack }: { order: string | null; returnedBack: boolean }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState('');
   const [timedOut, setTimedOut] = useState(false);
@@ -25,7 +25,7 @@ export default function PaymentResult({ order }: { order: string | null }) {
         const body = await response.json();
         if (!response.ok) throw new Error(body.error || 'Unable to check payment status.');
         if (active) { setStatus(body); setError(''); }
-        if (body.paymentStatus === 'succeeded' || body.paymentStatus === 'cancelled' || body.paymentStatus === 'failed') return;
+        if (body.paymentStatus === 'succeeded' || body.paymentStatus === 'cancelled' || body.paymentStatus === 'failed' || body.canResume || body.canRestart) return;
       } catch (failure) {
         if (active) setError(failure instanceof Error ? failure.message : 'Unable to check payment status.');
       }
@@ -45,6 +45,11 @@ export default function PaymentResult({ order }: { order: string | null }) {
   </>;
   if (status?.paymentStatus === 'cancelled') return <><h1 className="font-serif text-2xl font-bold text-[#4F438B]">Payment cancelled</h1><p className="mt-4 text-sm">Your report remains locked.</p></>;
   if (status?.paymentStatus === 'failed') return <><h1 className="font-serif text-2xl font-bold text-[#4F438B]">Payment unsuccessful</h1><p className="mt-4 text-sm">Your report remains locked. You can try again.</p></>;
+  if (status?.canResume) return <>
+    <h1 className="font-serif text-2xl font-bold text-[#4F438B]">Payment not completed</h1>
+    <p className="mt-4 text-sm text-[#5C527A]">{returnedBack ? 'You left the secure checkout before completing payment.' : 'This checkout is still waiting for payment details.'} Your report remains locked. Return to My 7-Day Report to resume the same order.</p>
+  </>;
+  if (status?.canRestart) return <><h1 className="font-serif text-2xl font-bold text-[#4F438B]">Checkout not completed</h1><p className="mt-4 text-sm text-[#5C527A]">Your report remains locked. Return to My 7-Day Report to start a new secure checkout.</p></>;
   return <>
     <h1 className="font-serif text-2xl font-bold text-[#4F438B]">Verifying payment</h1>
     <p className="mt-4 text-sm text-[#5C527A]">{timedOut ? 'Confirmation is taking longer than expected. Please check again later before making another payment.' : 'Please wait while your payment is confirmed.'}</p>
