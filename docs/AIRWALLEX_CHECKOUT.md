@@ -2,6 +2,8 @@
 
 MoodFlip Part 6 uses Airwallex sandbox PaymentIntents and the official hosted checkout. Payment verification, webhooks, fulfilment, and report unlocking are intentionally deferred to Part 7.
 
+Part 7 receives signed notifications at `/api/payments/webhook`, verifies the current PaymentIntent with Airwallex, and records verified successful purchases with report delivery `pending`. Apply `20261125100000_payment_webhook_processing.sql` before deploying Part 7. Set `AIRWALLEX_WEBHOOK_SECRET` and `CRON_SECRET` as Worker runtime secrets. The Worker entrypoint handles Cloudflare's five-minute Cron Trigger and invokes the protected recovery route to retry persisted events after provider or database outages.
+
 ## Local environment
 
 Configure these values in `.env.local` without committing credentials:

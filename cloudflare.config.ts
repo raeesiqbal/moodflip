@@ -1,9 +1,10 @@
-import { bindings, defineConfig, defineWorker } from "cf/config";
+import { bindings, defineConfig, defineWorker, triggers } from "cf/config";
 
 export default defineConfig({
   worker: defineWorker({
     name: "moodflip",
-    entrypoint: "vinext/server/fetch-handler",
+    entrypoint: "./cloudflare-worker.ts",
+    triggers: [triggers.scheduled({ schedule: "*/5 * * * *" })],
     compatibilityDate: "2026-11-21",
     assets: {
       htmlHandling: "none",
@@ -46,6 +47,7 @@ export default defineConfig({
       AIRWALLEX_API_KEY: bindings.secret(),
       AIRWALLEX_ACCOUNT_ID: bindings.secret(),
       AIRWALLEX_WEBHOOK_SECRET: bindings.secret(),
+      CRON_SECRET: bindings.secret(),
     },
   }),
 });

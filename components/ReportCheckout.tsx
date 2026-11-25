@@ -17,6 +17,7 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
   const [loadingPricing, setLoadingPricing] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; orderNumber?: string } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -38,6 +39,17 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
       });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!eligible) return;
+    let active = true;
+    void supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const response = await fetch('/api/payments/status', { headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store' });
+      if (response.ok && active) setPreviousPayment(await response.json());
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [eligible]);
 
   const selectedPrice = useMemo(
     () => pricing?.prices.find((price) => price.currency === currency) || null,
@@ -108,7 +120,13 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
         </ul>
       </div>
 
-      {eligible ? (
+      {eligible && previousPayment?.paymentStatus === 'succeeded' ? (
+        <p className="text-sm font-semibold text-[#4F438B]">Payment confirmed. Your report is being prepared.</p>
+      ) : eligible && ['pending', 'processing'].includes(previousPayment?.paymentStatus || '') ? (
+        <p className="text-sm font-semibold text-[#4F438B]">Your earlier payment is being verified. Please wait before starting another checkout.
+          {previousPayment?.orderNumber && <a className="ml-1 underline" href={`/checkout/result?order=${encodeURIComponent(previousPayment.orderNumber)}`}>Check status</a>}
+        </p>
+      ) : eligible ? (
         <div>
           <p className="text-sm font-bold text-[#4F438B] mb-4 max-w-lg mx-auto leading-relaxed">
             Your 7-Day MoodFlip Report is ready. Continue to secure checkout to purchase your personalised report.

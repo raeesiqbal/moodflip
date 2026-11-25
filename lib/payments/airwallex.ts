@@ -29,6 +29,8 @@ export type AirwallexPaymentIntent = {
   merchant_order_id: string;
   request_id?: string;
   created_at?: string;
+  updated_at?: string;
+  account_id?: string;
 };
 
 export type CreatePaymentIntentInput = {

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import PaymentResult from '@/components/PaymentResult';
 
 export default async function CheckoutResultPage({
   searchParams,
@@ -19,12 +20,7 @@ export default async function CheckoutResultPage({
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#F1EBFA] text-2xl" aria-hidden="true">
             ⏳
           </div>
-          <h1 className="font-serif text-2xl font-bold text-[#4F438B]">
-            Payment verification pending
-          </h1>
-          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-[#5C527A]">
-            Your return from secure checkout has been received. MoodFlip will only make the report available after the payment is independently verified.
-          </p>
+          <PaymentResult order={order} />
           {order && (
             <p className="mt-5 text-xs text-gray-500">
               Order reference: <span className="font-semibold text-[#4F438B]">{order}</span>
