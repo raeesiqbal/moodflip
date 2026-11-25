@@ -1,12 +1,18 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { headers } from 'next/headers';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { resolveCountryPricingFromHeaders } from '@/lib/payments/country';
+import { getSevenDayReportPrice } from '@/lib/payments/pricing';
 
-export default function PricingPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function PricingPage() {
+  const countryPricing = resolveCountryPricingFromHeaders(await headers());
+  const reportPrice = getSevenDayReportPrice(countryPricing.defaultCurrency);
+
   return (
     <div className="min-h-screen bg-[#FDF8F5] text-[#1A143F] flex flex-col justify-between selection:bg-[#EEE0FC] selection:text-[#4F438B]">
       <Header />
@@ -63,9 +69,9 @@ export default function PricingPage() {
                 <span className="font-serif text-2xl font-bold text-[#1A143F]">Report</span>
               </div>
 
-              {/* Price: US$7 with even font size and baseline */}
+              {/* Request-specific country suggestion from the shared fixed-price source. */}
               <div className="my-5 flex items-baseline gap-1">
-                <span className="font-serif text-4xl font-extrabold text-[#1A143F]">US$7</span>
+                <span className="font-serif text-4xl font-extrabold text-[#1A143F]">{reportPrice.displayPrice}</span>
               </div>
 
               {/* Purple frame box per P241 */}

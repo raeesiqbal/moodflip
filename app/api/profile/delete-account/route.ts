@@ -8,8 +8,8 @@ export async function DELETE(req: Request) {
     const admin = getSupabaseAdmin();
     const { data: { user }, error: userError } = await admin.auth.getUser(authHeader.slice(7));
     if (userError || !user) return NextResponse.json({ message: 'Invalid session' }, { status: 401 });
-    const { error: purchasesError } = await admin.from('purchases').delete().eq('email', user.email || '');
-    if (purchasesError) return NextResponse.json({ message: purchasesError.message }, { status: 400 });
+    // Financial purchase records must survive account deletion. Their nullable
+    // user/report references are cleared by the database foreign-key actions.
     const { error: checkinsError } = await admin.from('checkins').delete().eq('email', user.email || '');
     if (checkinsError) return NextResponse.json({ message: checkinsError.message }, { status: 400 });
     const { error: profileError } = await admin.from('profiles').delete().eq('email', user.email || '');

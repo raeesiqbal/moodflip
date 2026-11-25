@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { notify } from '@/lib/toast';
 import { useAuth } from '@/components/AuthProvider';
 import AuthPasswordFields from '@/components/AuthPasswordFields';
+import ReportCheckout from '@/components/ReportCheckout';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -661,48 +662,7 @@ function My7DayReportTab() {
           patterns, and personalised actionable suggestions.
         </p>
 
-        {/* Pricing Card */}
-        <div className="inline-block rounded-2xl border border-[#E4DAD7] bg-white p-6 text-left w-full max-w-sm mx-auto mb-6 shadow-2xs">
-          <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">
-            One-time purchase
-          </p>
-          <p className="text-3xl font-bold text-[#4F438B] mb-1">
-            US$7 <span className="text-base font-normal text-gray-400">/ report</span>
-          </p>
-          <ul className="text-xs sm:text-sm text-gray-600 space-y-2 mt-4">
-            <li className="flex items-center gap-2">
-              <span className="text-green-600 font-bold">✓</span> Full 7-day mood analysis
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-green-600 font-bold">✓</span> Personalised Mood Flip insights
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-green-600 font-bold">✓</span> Downloadable PDF format
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-green-600 font-bold">✓</span> Actionable suggestions
-            </li>
-          </ul>
-        </div>
-
-        {progress?.eligible ? (
-          <div>
-            <p className="text-sm font-bold text-[#4F438B] mb-4 max-w-lg mx-auto leading-relaxed">
-              Your 7-Day MoodFlip Report is ready. Download your personalised report with your saved moods,
-              positive moods, 60-second actions, and mood pattern summary.
-            </p>
-            <Link
-              href="/checkout"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7464AC] to-[#4F438B] text-white font-semibold px-8 py-3 text-sm hover:opacity-90 transition shadow-xs"
-            >
-              <span>📄</span> Get My 7-Day MoodFlip Report — US$7
-            </Link>
-          </div>
-        ) : (
-          <p className="text-sm font-semibold text-[#7464AC]">
-            Save at least one Mood Lift on seven different calendar days to unlock the purchase option.
-          </p>
-        )}
+        {!loading && !errorMessage && <ReportCheckout eligible={Boolean(progress?.eligible)} />}
         <p className="mt-4 text-xs text-gray-400">
           Progress is based on saved UTC calendar days. Up to three Mood Lifts may be saved per day.
         </p>

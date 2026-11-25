@@ -12,14 +12,14 @@ export async function GET(request: Request) {
     const admin = getSupabaseAdmin();
     const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
     const { data: inactive, error } = await admin.from('profiles')
-      .select('id, email').lt('last_active_at', cutoff);
+      .select('id').lt('last_active_at', cutoff);
     if (error) throw error;
 
     let deletedCount = 0;
     for (const profile of inactive || []) {
-      // Child checkins are cascaded from the profile; remove purchase email data too.
-      const { error: purchaseError } = await admin.from('purchases').delete().eq('email', profile.email);
-      if (purchaseError) throw purchaseError;
+      // Check-ins and reports follow the profile lifecycle. Financial purchase
+      // records are intentionally retained; their nullable user/report foreign
+      // keys become null through ON DELETE SET NULL.
       const { error: deleteError } = await admin.auth.admin.deleteUser(profile.id);
       if (deleteError) throw deleteError;
       deletedCount++;

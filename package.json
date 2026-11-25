@@ -13,6 +13,7 @@
     "deploy:vinext": "vinext-cloudflare deploy"
   },
   "dependencies": {
+    "@airwallex/components-sdk": "^1.37.1",
     "@supabase/supabase-js": "^2.112.4",
     "@vinext/cloudflare": "^1.4.0",
     "jspdf": "^4.2.1",

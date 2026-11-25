@@ -894,7 +894,7 @@ export default function HeroSectionExact({
       } else if (result.showDailyReminder && qualifyingDays < 6) {
         // The specification leaves the trigger open. Show this only after a
         // successful save. The backend claims it once per user and UTC day.
-        setDay2Reminder("You're building your 7-Day MoodFlip Report. Save up to 3 Mood Lifts per day. Your personalized report will be available after 7 days for US$7.");
+        setDay2Reminder("You're building your 7-Day MoodFlip Report. Save up to 3 Mood Lifts per day. Your personalised report will be available after 7 qualifying days at the fixed price shown for your selected currency.");
       }
 
       const shouldShowSaveModal = totalSaved === 1 || reachedSixDayMilestone || reachedSevenDayMilestone;
@@ -1569,7 +1569,7 @@ export default function HeroSectionExact({
                 boxShadow: "0 4px 14px rgba(116,100,172,0.3)",
               }}
             >
-              {saveModalLinksToReport ? "Download report" : "Got it"}
+              {saveModalLinksToReport ? "Get my report" : "Got it"}
             </button>
           </div>
         </div>
