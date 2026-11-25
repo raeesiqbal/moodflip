@@ -77,6 +77,12 @@ export interface Database {
           entry_count: number;
           report_data: Json;
           delivery_status: ReportDeliveryStatus;
+          email_status: 'pending' | 'sending' | 'sent' | 'delivered' | 'failed' | 'bounced' | 'complained';
+          email_attempts: number;
+          email_next_attempt_at: string;
+          email_claimed_at: string | null;
+          email_delivery_key: string | null;
+          email_last_error: string | null;
           download_completed_at: string | null;
           email_sent_at: string | null;
           email_delivered_at: string | null;
@@ -96,6 +102,12 @@ export interface Database {
           entry_count: number;
           report_data?: Json;
           delivery_status?: ReportDeliveryStatus;
+          email_status?: 'pending' | 'sending' | 'sent' | 'delivered' | 'failed' | 'bounced' | 'complained';
+          email_attempts?: number;
+          email_next_attempt_at?: string;
+          email_claimed_at?: string | null;
+          email_delivery_key?: string | null;
+          email_last_error?: string | null;
           download_completed_at?: string | null;
           email_sent_at?: string | null;
           email_delivered_at?: string | null;

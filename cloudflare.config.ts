@@ -33,6 +33,7 @@ export default defineConfig({
       AUTH_FROM_EMAIL: bindings.text(
         "MoodFlip Security <no-reply@moodflip.coach>",
       ),
+      REPORT_FROM_EMAIL: bindings.text("MoodFlip <no-reply@moodflip.coach>"),
 
       // Sandbox checkout configuration for Part 6. Change both environment
       // values and the base URL together when the account is approved for live.
@@ -48,6 +49,10 @@ export default defineConfig({
       AIRWALLEX_ACCOUNT_ID: bindings.secret(),
       AIRWALLEX_WEBHOOK_SECRET: bindings.secret(),
       CRON_SECRET: bindings.secret(),
+      RESEND_WEBHOOK_SECRET: bindings.secret(),
+      BUSINESS_NAME: bindings.secret(),
+      BUSINESS_ABN: bindings.secret(),
+      REPORT_SANDBOX_TO_EMAIL: bindings.secret(),
     },
   }),
 });

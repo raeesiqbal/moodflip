@@ -19,5 +19,10 @@ export default {
     if (!response.ok) {
       throw new Error(`Payment recovery returned HTTP ${response.status}.`);
     }
+    const deliveryRequest = new Request(new URL('/api/reports/deliver-pending', env.APP_URL), {
+      method: 'POST', headers: { Authorization: `Bearer ${env.CRON_SECRET}` },
+    });
+    const deliveryResponse = await nextWorker.fetch(deliveryRequest, env, context);
+    if (!deliveryResponse.ok) throw new Error(`Report delivery returned HTTP ${deliveryResponse.status}.`);
   },
 };

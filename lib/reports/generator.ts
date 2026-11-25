@@ -71,5 +71,7 @@ export function generateReportPDF(data: ReportData, customerName?: string | null
     patternSummary: `Across these seven saved days, you recorded ${snapshot.entries.length} Mood Lifts. ${mostFrequent[0]} appeared ${mostFrequent[1]} ${mostFrequent[1] === 1 ? 'time' : 'times'}. This is a summary of your saved entries, not a medical assessment.`,
   };
   const doc = generate7DayReportPDF(report);
+  doc.setCreationDate(new Date(snapshot.entries[0].created_at));
+  doc.setFileId(snapshot.entries[0].id.replace(/-/g, '').slice(0, 32));
   return new Uint8Array(doc.output('arraybuffer'));
 }

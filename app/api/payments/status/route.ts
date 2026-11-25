@@ -23,11 +23,13 @@ export async function GET(request: Request) {
   if (!purchase && !order) return NextResponse.json({ success: true, paymentStatus: 'none', deliveryStatus: 'not_started' }, { headers: { 'Cache-Control': 'private, no-store' } });
   if (!purchase) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   let deliveryStatus = 'not_started';
+  let emailStatus = 'pending';
   if (purchase.report_id) {
-    const { data: report, error: reportError } = await admin.from('reports').select('delivery_status')
+    const { data: report, error: reportError } = await admin.from('reports').select('delivery_status,email_status')
       .eq('id', purchase.report_id).eq('user_id', user.id).single();
     if (reportError) return NextResponse.json({ error: 'Unable to load report status' }, { status: 503 });
     deliveryStatus = report.delivery_status;
+    emailStatus = report.email_status;
   }
   let providerStatus: string | null = null;
   let canResume = false;
@@ -53,7 +55,7 @@ export async function GET(request: Request) {
     }
   }
   return NextResponse.json({ success: true, orderNumber: purchase.order_number,
-    paymentStatus: purchase.payment_status, deliveryStatus,
+    paymentStatus: purchase.payment_status, deliveryStatus, emailStatus,
     reportId: purchase.payment_status === 'succeeded' ? purchase.report_id : null,
     providerStatus, canResume, canRestart,
     amount: purchase.amount_minor === null ? null : purchase.amount_minor / 10 ** (purchase.currency_decimals || 0),

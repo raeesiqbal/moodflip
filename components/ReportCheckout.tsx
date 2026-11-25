@@ -17,7 +17,7 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
   const [loadingPricing, setLoadingPricing] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; deliveryStatus?: string; reportId?: string | null; providerStatus?: string | null; canResume?: boolean; canRestart?: boolean; orderNumber?: string; currency?: ReportCurrency } | null>(null);
+  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; deliveryStatus?: string; emailStatus?: string; reportId?: string | null; providerStatus?: string | null; canResume?: boolean; canRestart?: boolean; orderNumber?: string; currency?: ReportCurrency } | null>(null);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
@@ -157,6 +157,12 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
 
       {eligible && previousPayment?.paymentStatus === 'succeeded' ? (
         <div className="text-sm font-semibold text-[#4F438B]">
+          <p className="mb-3">{previousPayment.emailStatus === 'delivered'
+            ? 'Your report e-mail has been delivered.'
+            : previousPayment.emailStatus === 'sent' ? 'Your report e-mail has been sent.'
+            : ['failed', 'bounced'].includes(previousPayment.emailStatus || '')
+              ? 'We encountered an e-mail delivery issue. Your payment remains valid. Please contact contact@moodflip.coach if your report does not arrive.'
+              : 'Your purchase confirmation and report e-mail are being prepared.'}</p>
           {previousPayment.deliveryStatus === 'delivered' ? (
             <p>Your report download was delivered. Your purchase remains confirmed.</p>
           ) : previousPayment.deliveryStatus === 'failed' ? (
