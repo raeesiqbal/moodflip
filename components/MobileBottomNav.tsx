@@ -220,7 +220,7 @@ export default function MobileBottomNav() {
                 className="flex items-center gap-3 p-3 rounded-xl text-[#1A143F] font-bold text-sm hover:bg-[#F4EBF5] hover:text-[#7464AC] transition"
               >
                 <span className="text-lg">🔒</span>
-                <span>Privacy Policy</span>
+                <span>Terms &amp; Privacy Policy</span>
               </Link>
               {isAdmin && <Link
                 href="/admin"

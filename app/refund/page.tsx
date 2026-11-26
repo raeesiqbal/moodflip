@@ -80,7 +80,7 @@ export default function RefundPage() {
               ← Back to Home
             </Link>
             <div className="flex items-center gap-4">
-              <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
+              <Link href="/privacy" className="hover:underline">Terms &amp; Privacy Policy</Link>
               <Link href="/terms" className="hover:underline">Terms of Service</Link>
               <Link href="/disclaimer" className="hover:underline">Disclaimer</Link>
             </div>

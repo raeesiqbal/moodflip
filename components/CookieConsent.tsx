@@ -111,7 +111,7 @@ export default function CookieConsent() {
           <p className="text-[11px] sm:text-xs text-[#5B5278] font-medium leading-relaxed mb-3 sm:mb-4">
             {settings.bannerText || 'MoodFlip uses essential cookies and analytics to enhance your self-reflection experience and show personalized wellness insights.'}{' '}
             <Link href={settings.privacyLink || '/privacy'} className="text-[#7464AC] font-extrabold underline">
-              Privacy Policy
+              Terms &amp; Privacy Policy
             </Link>
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">

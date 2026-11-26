@@ -34,12 +34,12 @@ export default function Header() {
         {/* ACTION BUTTONS: Nav + Login — all on the right */}
         <div className="flex items-center gap-4 md:gap-6 lg:gap-8 shrink-0">
 
-          {/* DESKTOP NAV: Home | About | Privacy Policy | Contact */}
-          <nav className="hidden sm:flex items-center gap-4 md:gap-6 lg:gap-8 text-sm">
+          {/* DESKTOP NAV: Home | About | Terms & Privacy Policy | Contact */}
+          <nav className="hidden md:flex items-center gap-4 md:gap-6 lg:gap-8 text-sm">
             {[
               { href: '/', label: 'Home' },
               { href: '/about', label: 'About' },
-              { href: '/privacy', label: 'Privacy Policy' },
+              { href: '/privacy', label: 'Terms & Privacy Policy' },
               { href: '/contact', label: 'Contact' },
             ].map(({ href, label }) => (
               <Link
@@ -100,7 +100,7 @@ export default function Header() {
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
-            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-xl border border-[#E4DAD7] bg-[#FEFAF8] text-[#7464AC] hover:bg-[#F4EBF5] hover:border-[#7666AB] transition shadow-xs cursor-pointer"
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl border border-[#E4DAD7] bg-[#FEFAF8] text-[#7464AC] hover:bg-[#F4EBF5] hover:border-[#7666AB] transition shadow-xs cursor-pointer"
             aria-label="Toggle Navigation Menu"
             aria-expanded={menuOpen}
           >
@@ -120,14 +120,14 @@ export default function Header() {
         </div>
       </div>
 
-      {/* MOBILE DROPDOWN: Home | About | Privacy Policy | Contact | Login */}
+      {/* MOBILE DROPDOWN: Home | About | Terms & Privacy Policy | Contact | Login */}
       {menuOpen && (
         <nav className="md:hidden flex flex-col p-4 bg-[#FDF8F5]/98 backdrop-blur-xl border-t border-[#E4DAD7] shadow-xl animate-in slide-in-from-top-2 duration-200 gap-1.5" suppressHydrationWarning>
           <div className="flex flex-col gap-1">
             {[
               { href: '/', label: 'Home', icon: '🏠' },
               { href: '/about', label: 'About', icon: 'ℹ️' },
-              { href: '/privacy', label: 'Privacy Policy', icon: '🔒' },
+              { href: '/privacy', label: 'Terms & Privacy Policy', icon: '🔒' },
               { href: '/contact', label: 'Contact', icon: '✉️' },
             ].map(({ href, label, icon }) => (
               <Link

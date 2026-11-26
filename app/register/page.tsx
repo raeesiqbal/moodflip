@@ -57,7 +57,7 @@ export default function RegisterPage() {
       return;
     }
     if (!consentData) {
-      notify.error('Please accept the Privacy Policy before creating your profile.');
+      notify.error('Please accept the Terms & Privacy Policy before creating your profile.');
       return;
     }
     setIsLoading(true);
@@ -203,7 +203,7 @@ export default function RegisterPage() {
                     className="accent-[#7464AC] w-3.5 h-3.5 cursor-pointer mt-0.5 flex-shrink-0" />
                   <span>
                     By creating a profile, you agree that MoodFlip may store your e-mail address, selected moods and dates, actions shown, and purchase history so we can create and offer personalised downloads.{' '}
-                    <a href="/privacy" className="font-bold hover:underline text-[#7464AC]">Privacy Policy</a>
+                    <a href="/privacy" className="font-bold hover:underline text-[#7464AC]">Terms &amp; Privacy Policy</a>
                   </span>
                 </label>
               </div>

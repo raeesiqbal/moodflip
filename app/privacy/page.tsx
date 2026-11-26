@@ -3,8 +3,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export const metadata = {
-  title: 'MoodFlip | Self-Help Tool',
-  description: 'MoodFlip respects your privacy. This Privacy Policy explains what information we may collect and how it is used.',
+  title: 'Terms & Privacy Policy | MoodFlip',
+  description: 'MoodFlip respects your privacy. This Terms & Privacy Policy explains what information we may collect and how it is used.',
 };
 
 export default function PrivacyPage() {
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           />
           <div className="relative z-10">
             <h1 className="font-serif text-xl sm:text-2xl font-extrabold text-[#4F438B] tracking-tight">
-              Privacy Policy
+              Terms &amp; Privacy Policy
             </h1>
           </div>
         </div>
@@ -67,8 +67,7 @@ export default function PrivacyPage() {
               3. Paid downloads
             </h2>
             <div className="space-y-1 text-xs sm:text-sm text-[#1A143F] leading-relaxed pl-1">
-              <p>If you purchase a MoodFlip PDF document, payment is processed through a secure third-party payment provider.</p>
-              <p>MoodFlip does not store your card details.</p>
+              <p>If you purchase a MoodFlip PDF document, payment is processed through a secure third-party payment provider. MoodFlip does not store your card details.</p>
             </div>
           </section>
 
@@ -86,7 +85,7 @@ export default function PrivacyPage() {
           {/* Section 5 */}
           <section className="space-y-1">
             <h2 className="text-base sm:text-lg font-bold text-[#4F438B]">
-              5. E-mail messages
+              5. Email messages
             </h2>
             <div className="space-y-1 text-xs sm:text-sm text-[#1A143F] leading-relaxed pl-1">
               <p>By creating a profile, you may receive e-mails related to your saved Mood Lifts, paid downloads or account activity.</p>
@@ -125,8 +124,22 @@ export default function PrivacyPage() {
             </div>
           </section>
 
+          {/* Section 9 */}
+          <section className="space-y-1 pb-1">
+            <h2 className="text-base sm:text-lg font-bold text-[#4F438B]">
+              9. PDF delivery and retention
+            </h2>
+            <div className="space-y-1 text-xs sm:text-sm text-[#1A143F] leading-relaxed pl-1">
+              <p>
+                Please download and save your personalised PDF report. MoodFlip deletes its copies of report-delivery e-mails and attachments after 30 days. This does not affect copies already received or saved by you. Repeat downloads are not available. If your original delivery fails, contact{' '}
+                <a href="mailto:contact@moodflip.coach" className="text-[#7464AC] underline hover:text-[#4F438B]">contact@moodflip.coach</a>{' '}
+                so we can resolve it without charging you again.
+              </p>
+            </div>
+          </section>
+
           <p className="text-xs italic text-[#7464AC] pt-2 border-t border-[#E4DAD7]/60">
-            Last updated: 30 September, 2026
+            Last updated: 27 November 2026
           </p>
 
         </div>

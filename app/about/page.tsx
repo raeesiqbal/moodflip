@@ -84,7 +84,7 @@ export default function AboutPage() {
               href="/privacy"
               className="text-sm font-bold text-[#7464AC] hover:underline"
             >
-              Privacy Policy →
+              Terms &amp; Privacy Policy →
             </Link>
           </div>
 

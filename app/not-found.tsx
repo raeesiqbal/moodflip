@@ -129,7 +129,7 @@ export default function NotFound() {
           <span>·</span>
           <Link href="/contact" className="hover:text-[#7464AC] transition-colors">Contact</Link>
           <span>·</span>
-          <Link href="/privacy" className="hover:text-[#7464AC] transition-colors">Privacy Policy</Link>
+          <Link href="/privacy" className="hover:text-[#7464AC] transition-colors">Terms &amp; Privacy Policy</Link>
         </div>
 
         {/* 60-second mood action */}
