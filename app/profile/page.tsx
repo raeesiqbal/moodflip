@@ -682,25 +682,169 @@ function My7DayReportTab() {
 
 // ─── Tab: Downloads (Spec §10) ────────────────────────────────────────────────
 
+interface PurchasedReport {
+  id: string;
+  report_id: string | null;
+  order_number: string;
+  report_type: string;
+  product_name: string;
+  amount_minor: number | null;
+  currency: string | null;
+  currency_decimals: number | null;
+  paid_at: string | null;
+  report?: {
+    delivery_status: string;
+    email_status: string;
+    download_completed_at: string | null;
+    updated_at: string;
+  };
+}
+
+async function loadPurchasedReports(userId: string): Promise<PurchasedReport[]> {
+  const { data: purchases, error: purchaseError } = await supabase.from('purchases')
+    .select('id,report_id,order_number,report_type,product_name,amount_minor,currency,currency_decimals,paid_at')
+    .eq('user_id', userId).eq('payment_status', 'succeeded').eq('payment_provider', 'airwallex')
+    .order('paid_at', { ascending: false, nullsFirst: false });
+  if (purchaseError) throw purchaseError;
+  if (!purchases?.length) return [];
+
+  const reportIds = Array.from(new Set(purchases.map((purchase) => purchase.report_id).filter((id): id is string => Boolean(id))));
+  const reportsById = new Map<string, PurchasedReport['report']>();
+  if (reportIds.length) {
+    const { data: reports, error: reportError } = await supabase.from('reports')
+      .select('id,delivery_status,email_status,download_completed_at,updated_at')
+      .eq('user_id', userId).in('id', reportIds);
+    if (reportError) throw reportError;
+    for (const report of reports || []) reportsById.set(report.id, report);
+  }
+  return purchases.map((purchase) => ({
+    ...purchase,
+    report: purchase.report_id ? reportsById.get(purchase.report_id) : undefined,
+  }));
+}
+
 function DownloadsTab() {
+  const { user } = useAuth();
+  const [purchases, setPurchases] = useState<PurchasedReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setPurchases([]);
+    setLoading(true);
+    setError('');
+    if (user?.id) {
+      void loadPurchasedReports(user.id).then((rows) => {
+        if (active) setPurchases(rows);
+      }).catch(() => {
+        if (active) setError('Unable to load your purchased reports. Please try again later.');
+      }).finally(() => {
+        if (active) setLoading(false);
+      });
+    }
+    return () => { active = false; };
+  }, [user?.id]);
+
+  const downloadReport = async (purchase: PurchasedReport) => {
+    if (!purchase.report_id || downloadingId) return;
+    setDownloadingId(purchase.id);
+    setError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || session.user.id !== user?.id) throw new Error('Your session has expired. Please sign in again.');
+      const response = await fetch(`/api/reports/${encodeURIComponent(purchase.report_id)}/download`, {
+        headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store',
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        throw new Error(result?.error || 'Unable to download your report.');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = purchase.report_type === '7_day' ? 'MoodFlip-7-Day-Report.pdf' : 'MoodFlip-Report.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to download your report.');
+    } finally {
+      try {
+        if (user?.id) setPurchases(await loadPurchasedReports(user.id));
+      } catch {
+        setError('Unable to refresh report status. Please reopen Downloads to check it.');
+      }
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <section>
       <h2 className="text-xl font-bold text-[#4F438B] mb-2">Downloads</h2>
-      <p className="text-xs text-gray-500 mb-6">
-        Access your purchased PDF progress reports, worksheets, and resources
-      </p>
+      <p className="text-xs text-gray-500 mb-6">Your purchased MoodFlip reports</p>
 
-      <div className="rounded-3xl border border-[#E4DAD7] bg-[#FEFAF8] p-8 sm:p-10 text-center shadow-xs">
-        <div className="text-5xl mb-4">📥</div>
-        <h3 className="text-lg font-bold text-[#4F438B] mb-2">Your Purchased Reports & Downloads</h3>
-        <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto leading-relaxed">
-          Your personalised PDF reports and resources are permanently stored here. You can download
-          or re-generate them at any time.
-        </p>
-        <p className="text-sm font-semibold text-[#7464AC]">
-          Purchased reports will appear here when they are available for download.
-        </p>
-      </div>
+      {loading ? (
+        <div className="rounded-3xl border border-[#E4DAD7] bg-[#FEFAF8] p-8 text-center text-sm text-[#5C527A]">Loading your purchased reports…</div>
+      ) : error && !purchases.length ? (
+        <div className="rounded-3xl border border-[#E4DAD7] bg-[#FEFAF8] p-8 text-center text-sm text-[#5C527A]" role="alert">{error}</div>
+      ) : !purchases.length ? (
+        <div className="rounded-3xl border border-[#E4DAD7] bg-[#FEFAF8] p-8 sm:p-10 text-center shadow-xs">
+          <h3 className="text-lg font-bold text-[#4F438B] mb-2">No purchased reports yet.</h3>
+          <p className="text-gray-500 text-sm">Your purchased MoodFlip reports will appear here.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-[#5C527A]">Please download and save your personalised PDF. Repeat downloads are not available.</p>
+          {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+          {purchases.map((purchase) => {
+            const report = purchase.report;
+            const downloadCompleted = Boolean(report?.download_completed_at);
+            const retryable = report?.delivery_status === 'failed' ||
+              (report?.delivery_status === 'processing' && Date.parse(report.updated_at) < Date.now() - 5 * 60_000);
+            const canDownload = purchase.report_type === '7_day' && !downloadCompleted &&
+              (report?.delivery_status === 'pending' || report?.delivery_status === 'generated' || retryable);
+            const emailFailed = ['failed', 'bounced', 'complained'].includes(report?.email_status || '');
+            const amount = purchase.amount_minor != null && purchase.currency && purchase.currency_decimals != null
+              ? `${purchase.currency} ${(purchase.amount_minor / 10 ** purchase.currency_decimals).toFixed(purchase.currency_decimals)}`
+              : 'Amount unavailable';
+            const paidDate = purchase.paid_at ? new Date(purchase.paid_at) : null;
+            const purchaseDate = paidDate && !Number.isNaN(paidDate.getTime())
+              ? paidDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+              : 'Date unavailable';
+            const deliveryStatus = !report ? 'Delivery needs attention'
+              : downloadCompleted ? 'Original download completed'
+              : emailFailed ? 'E-mail delivery needs attention'
+                : ['sent', 'delivered'].includes(report?.email_status || '') ? 'PDF e-mailed'
+                  : report?.delivery_status === 'failed' ? 'Original download failed — retry available'
+                    : report?.delivery_status === 'processing' ? 'Preparing original download'
+                      : canDownload ? 'Original download available' : 'Preparing PDF delivery';
+            return (
+              <article key={purchase.id} className="rounded-3xl border border-[#E4DAD7] bg-[#FEFAF8] p-6 sm:p-8 shadow-xs">
+                <h3 className="text-lg font-bold text-[#4F438B]">{purchase.product_name || (purchase.report_type === '7_day' ? '7-Day MoodFlip Report' : 'MoodFlip Report')}</h3>
+                <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                  <div><dt className="text-gray-500">Purchase date</dt><dd className="font-medium text-[#4F438B]">{purchaseDate}</dd></div>
+                  <div><dt className="text-gray-500">Order reference</dt><dd className="break-all font-medium text-[#4F438B]">{purchase.order_number}</dd></div>
+                  <div><dt className="text-gray-500">Amount paid</dt><dd className="font-medium text-[#4F438B]">{amount}</dd></div>
+                  <div><dt className="text-gray-500">PDF delivery status</dt><dd className="font-medium text-[#4F438B]">{deliveryStatus}</dd></div>
+                </dl>
+                {canDownload && (
+                  <button type="button" disabled={Boolean(downloadingId)} onClick={() => void downloadReport(purchase)}
+                    className="mt-5 rounded-full bg-[#4F438B] px-7 py-3 text-sm font-semibold text-white disabled:opacity-60">
+                    {downloadingId === purchase.id ? 'Preparing report…' : retryable ? 'Retry original download' : 'Download original PDF'}
+                  </button>
+                )}
+                {(emailFailed || !report) && (
+                  <p className="mt-4 text-sm text-[#5C527A]">Your payment remains valid. If delivery failed, please <a className="underline" href={`mailto:contact@moodflip.coach?subject=${encodeURIComponent(`Report delivery help: ${purchase.order_number}`)}`}>contact us</a> so we can resolve it without another charge.</p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
