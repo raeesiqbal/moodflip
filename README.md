@@ -74,9 +74,27 @@ Open [http://localhost:3005](http://localhost:3005).
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Contact bot protection | Public Cloudflare Turnstile widget key |
 | `TURNSTILE_SECRET_KEY` | Contact bot protection | Server-only Cloudflare Turnstile verification key |
 | `TURNSTILE_EXPECTED_HOSTNAMES` | Contact bot protection | Comma-separated frontend hostnames accepted by the API |
-| `CRON_SECRET` | For scheduled cleanup | Authorizes the inactive-profile cleanup endpoint |
+| `CRON_SECRET` | For scheduled jobs | Authorizes payment recovery, report delivery, and inactive-account cleanup |
 
 Never expose server credentials through variables prefixed with `NEXT_PUBLIC_`. Do not commit `.env.local`.
+
+### Inactive-account cleanup on Cloudflare
+
+`cloudflare.config.ts` configures a daily Cron Trigger (`0 3 * * *`, 03:00 UTC).
+`cloudflare-worker.ts` sends that trigger to the protected `/api/cron/cleanup`
+route. Each run checks up to 100 non-admin profiles whose `last_active_at` is older
+than 90 days, rechecks activity and recent Supabase sign-in, then deletes the
+Supabase Auth user. Database foreign keys remove the profile, saved Mood Lifts,
+and generated report record while retaining purchase records with their
+customer/report references cleared. Authenticated visits update `last_active_at`
+through `/api/user/heartbeat` at most once per day.
+
+Deploy the Worker configuration and confirm both schedules in Cloudflare's Cron
+Triggers: every five minutes for payment/report recovery and daily for account
+cleanup. `CRON_SECRET`, `APP_URL`, and `SUPABASE_SERVICE_ROLE_KEY` must be present
+as Worker runtime bindings. The cleanup endpoint is never exposed without the
+secret. Review Cron Trigger Past Events for failures; no production accounts
+should be deleted merely to test the schedule.
 
 For contact delivery, verify your sending domain in Resend and set `CONTACT_FROM_EMAIL`
 to an address on that domain (for example, `MoodFlip <no-reply@moodflip.coach>`).

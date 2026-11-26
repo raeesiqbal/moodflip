@@ -4,7 +4,10 @@ export default defineConfig({
   worker: defineWorker({
     name: "moodflip",
     entrypoint: "./cloudflare-worker.ts",
-    triggers: [triggers.scheduled({ schedule: "*/5 * * * *" })],
+    triggers: [
+      triggers.scheduled({ schedule: "*/5 * * * *" }),
+      triggers.scheduled({ schedule: "0 3 * * *" }),
+    ],
     compatibilityDate: "2026-11-21",
     assets: {
       htmlHandling: "none",

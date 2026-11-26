@@ -40,6 +40,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    let lastAttempt = 0;
+    let active = true;
+    const touch = async () => {
+      if (!active || document.hidden || Date.now() - lastAttempt < 60 * 60_000) return;
+      lastAttempt = Date.now();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!active || !session) return;
+        const response = await fetch('/api/user/heartbeat', {
+          method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store',
+        });
+        if (!response.ok) lastAttempt = 0;
+      } catch { lastAttempt = 0; }
+    };
+    void touch();
+    const onVisible = () => { if (!document.hidden) void touch(); };
+    document.addEventListener('visibilitychange', onVisible);
+    const interval = setInterval(() => { if (!document.hidden) void touch(); }, 60 * 60_000);
+    return () => { active = false; clearInterval(interval); document.removeEventListener('visibilitychange', onVisible); };
+  }, [user?.id]);
+
   const value = useMemo<AuthContextValue>(() => ({
     user,
     loading,
