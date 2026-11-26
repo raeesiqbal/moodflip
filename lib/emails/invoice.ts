@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import { minorUnitsToMajor } from '@/lib/payments/pricing';
 
 export type InvoicePurchase = {

@@ -30,7 +30,7 @@ function loadPaymentStatus(token: string) {
 
 export default function ReportCheckout({ eligible }: { eligible: boolean }) {
   const [pricing, setPricing] = useState<CheckoutPricingResponse | null>(null);
-  const [currency, setCurrency] = useState<ReportCurrency>('EUR');
+  const [currency, setCurrency] = useState<ReportCurrency>('AUD');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [loadingPricing, setLoadingPricing] = useState(true);
   const [submitting, setSubmitting] = useState(false);

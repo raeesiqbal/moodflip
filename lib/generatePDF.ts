@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import { COVER_IMAGE_BASE64, BRAND_LOGO_ICON_BASE64 } from './coverImage';
 
 // ════════════════════════════════════════════════════════════════════

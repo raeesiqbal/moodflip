@@ -663,11 +663,12 @@ function My7DayReportTab() {
       <div className="rounded-3xl border border-[#E4DAD7] bg-[#FEFAF8] p-6 sm:p-10 text-center shadow-xs">
         <div className="text-5xl mb-4">📊</div>
         <h3 className="text-lg font-bold text-[#4F438B] mb-2">
-          Your Personalised PDF Progress Report
+          {progress?.eligible ? 'Your 7-Day MoodFlip Report is ready.' : 'Your 7-Day MoodFlip Report'}
         </h3>
         <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto leading-relaxed">
-          Get a comprehensive PDF report of your 7-day mood journey, including your Mood Lifts,
-          patterns, and personalised actionable suggestions.
+          {progress?.eligible
+            ? 'Download your personalised report with your saved moods, positive moods, 60-second actions, and mood pattern summary.'
+            : 'Save a Mood Lift on seven different calendar days to unlock your personalised report.'}
         </p>
 
         {!errorMessage && <div className={loading ? 'hidden' : undefined}><ReportCheckout eligible={Boolean(progress?.eligible)} /></div>}

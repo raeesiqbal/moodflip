@@ -39,9 +39,9 @@ export function normalizeCountryCode(value: unknown): string | null {
 
 export function currencyForCountry(countryCode: unknown): ReportCurrency {
   const normalized = normalizeCountryCode(countryCode);
-  if (!normalized) return 'EUR';
+  if (!normalized) return 'AUD';
   if (EUROZONE_COUNTRIES.has(normalized)) return 'EUR';
-  return DIRECT_CURRENCY_BY_COUNTRY[normalized] || 'EUR';
+  return DIRECT_CURRENCY_BY_COUNTRY[normalized] || 'AUD';
 }
 
 export function resolveCountryPricing(request: Request): CountryPricing {
