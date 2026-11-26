@@ -37,6 +37,7 @@ export default defineConfig({
         "MoodFlip Security <no-reply@moodflip.coach>",
       ),
       REPORT_FROM_EMAIL: bindings.text("MoodFlip <no-reply@moodflip.coach>"),
+      REPORT_DELIVERY_TO_CUSTOMER: bindings.text("true"),
 
       // Sandbox checkout configuration for Part 6. Change both environment
       // values and the base URL together when the account is approved for live.

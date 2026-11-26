@@ -7,6 +7,10 @@ const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&
 
 type Purchase = { id: string; report_id: string; user_id: string; email: string; order_number: string; product_name: string; amount_minor: number; currency: string; currency_decimals: number; paid_at: string; payment_status: string };
 
+export function reportDeliveryNeedsSandboxRecipient() {
+  return process.env.AIRWALLEX_ENV === 'demo' && process.env.REPORT_DELIVERY_TO_CUSTOMER !== 'true';
+}
+
 function receipt(purchase: Purchase, name: string | null, includeReport: boolean) {
   const business = process.env.BUSINESS_NAME?.trim();
   const abn = process.env.BUSINESS_ABN?.trim();
@@ -69,8 +73,8 @@ export async function deliverPurchasedReport(reportId: string) {
     const { data: profile } = await admin.from('profiles').select('name').eq('id', report.user_id).maybeSingle();
     const pdf = generateReportPDF(parseReportData(report.report_data), profile?.name);
     const content = receipt(p, profile?.name || null, true);
-    const recipient = process.env.AIRWALLEX_ENV === 'demo' ? process.env.REPORT_SANDBOX_TO_EMAIL : p.email;
-    if (!recipient) throw new Error('Sandbox report recipient is not configured');
+    const recipient = reportDeliveryNeedsSandboxRecipient() ? process.env.REPORT_SANDBOX_TO_EMAIL : p.email;
+    if (!recipient) throw new Error('Report recipient is not configured');
     const messageId = await sendEmail({ to: recipient, subject: `Your 7-Day MoodFlip Report - Order ${p.order_number}`,
       ...content, key: report.email_delivery_key, pdf });
     const { error: updateError } = await admin.from('reports').update({ email_message_id: messageId,
