@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-type Status = { paymentStatus: string; providerStatus: string | null; canResume: boolean; canRestart: boolean; deliveryStatus: string; emailStatus: string; amount: number | null; currency: string | null; orderNumber: string };
+type Status = { paymentStatus: string; providerStatus: string | null; canResume: boolean; canRestart: boolean; deliveryStatus: string; emailStatus: string; canDownload: boolean; canRetryDownload: boolean; downloadCompleted: boolean; amountMinor: number | null; currencyDecimals: number | null; currency: string | null; orderNumber: string };
 
 export default function PaymentResult({ order, returnedBack }: { order: string | null; returnedBack: boolean }) {
   const [status, setStatus] = useState<Status | null>(null);
@@ -15,7 +15,10 @@ export default function PaymentResult({ order, returnedBack }: { order: string |
     let active = true;
     let attempts = 0;
     let timer: ReturnType<typeof setTimeout>;
+    let inFlight = false;
     const load = async () => {
+      if (inFlight) return;
+      inFlight = true;
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('Please sign in to view your payment status.');
@@ -25,28 +28,34 @@ export default function PaymentResult({ order, returnedBack }: { order: string |
         const body = await response.json();
         if (!response.ok) throw new Error(body.error || 'Unable to check payment status.');
         if (active) { setStatus(body); setError(''); }
-        if ((body.paymentStatus === 'succeeded' && ['sent', 'delivered', 'bounced', 'complained'].includes(body.emailStatus)) || body.paymentStatus === 'cancelled' || body.paymentStatus === 'failed' || body.canResume || body.canRestart) return;
+        if ((body.paymentStatus === 'succeeded' && ['delivered', 'bounced', 'complained'].includes(body.emailStatus)) || body.paymentStatus === 'cancelled' || body.paymentStatus === 'failed' || body.canResume || body.canRestart) return;
       } catch (failure) {
         if (active) setError(failure instanceof Error ? failure.message : 'Unable to check payment status.');
-      }
+      } finally { inFlight = false; }
       attempts++;
-      if (active && attempts < 12) timer = setTimeout(() => void load(), 5000);
+      if (active && attempts < 12) timer = setTimeout(() => { if (!document.hidden) void load(); }, 10_000);
       else if (active) setTimedOut(true);
     };
+    const onVisible = () => { if (!document.hidden) { clearTimeout(timer); void load(); } };
     void load();
-    return () => { active = false; clearTimeout(timer); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { active = false; clearTimeout(timer); document.removeEventListener('visibilitychange', onVisible); };
   }, [order]);
 
   if (!order) return <p role="alert">Invalid order reference.</p>;
   if (status?.paymentStatus === 'succeeded') return <>
-    <h1 className="font-serif text-2xl font-bold text-[#4F438B]">Payment successful.</h1>
-    <p className="mt-4 text-sm text-[#5C527A]">{status.emailStatus === 'delivered'
-      ? 'Your personalised report e-mail has been delivered.'
-      : status.emailStatus === 'sent' ? 'Your personalised report e-mail has been sent.'
-      : ['failed', 'bounced', 'complained'].includes(status.emailStatus)
-        ? 'We encountered an issue delivering your report. Your payment remains valid. Please contact contact@moodflip.coach if it does not arrive.'
-        : 'Your payment has been confirmed. Your personalised MoodFlip Report is being prepared.'}</p>
-    <p className="mt-4 text-xs text-gray-500">{status.amount?.toFixed(status.currency === 'JPY' ? 0 : 2)} {status.currency} · {status.orderNumber}</p>
+    <h1 className="font-serif text-2xl font-bold text-[#4F438B]">{status.canRetryDownload || ['failed', 'bounced', 'complained'].includes(status.emailStatus) ? 'Payment received.' : 'Payment successful.'}</h1>
+    <p className="mt-4 text-sm text-[#5C527A]">{status.canDownload && ['sent', 'delivered'].includes(status.emailStatus)
+      ? 'Your MoodFlip Report is ready to download. A copy has also been emailed to you.'
+      : status.canDownload || status.canRetryDownload
+        ? 'Your report is being prepared. If it does not arrive, you can download it from your profile or contact support.'
+        : ['failed', 'bounced', 'complained'].includes(status.emailStatus)
+          ? 'Your report e-mail could not be delivered. Please contact support.'
+        : status.downloadCompleted && ['sent', 'delivered'].includes(status.emailStatus)
+          ? 'Your report download is complete. A copy has also been emailed to you.'
+          : 'Your payment has been confirmed. Your personalised MoodFlip Report is being prepared.'}</p>
+    <p className="mt-4 text-xs text-gray-500">{status.amountMinor != null && status.currencyDecimals != null && status.currency
+      ? `${status.currency} ${(status.amountMinor / 10 ** status.currencyDecimals).toFixed(status.currencyDecimals)}` : 'Amount unavailable'} · {status.orderNumber}</p>
   </>;
   if (status?.paymentStatus === 'cancelled') return <><h1 className="font-serif text-2xl font-bold text-[#4F438B]">Payment cancelled</h1><p className="mt-4 text-sm">Your report remains locked.</p></>;
   if (status?.paymentStatus === 'failed') return <><h1 className="font-serif text-2xl font-bold text-[#4F438B]">Payment unsuccessful</h1><p className="mt-4 text-sm">Your report remains locked. You can try again.</p></>;

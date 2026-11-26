@@ -24,12 +24,21 @@ export async function GET(request: Request) {
   if (!purchase) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   let deliveryStatus = 'not_started';
   let emailStatus = 'pending';
+  let canDownload = false;
+  let canRetryDownload = false;
+  let downloadCompleted = false;
   if (purchase.report_id) {
-    const { data: report, error: reportError } = await admin.from('reports').select('delivery_status,email_status')
+    const { data: report, error: reportError } = await admin.from('reports').select('delivery_status,email_status,download_completed_at,updated_at')
       .eq('id', purchase.report_id).eq('user_id', user.id).single();
     if (reportError) return NextResponse.json({ error: 'Unable to load report status' }, { status: 503 });
     deliveryStatus = report.delivery_status;
     emailStatus = report.email_status;
+    downloadCompleted = Boolean(report.download_completed_at);
+    if (purchase.payment_status === 'succeeded' && !downloadCompleted) {
+      canDownload = ['pending', 'generated'].includes(deliveryStatus);
+      canRetryDownload = deliveryStatus === 'failed'
+        || (deliveryStatus === 'processing' && Date.parse(report.updated_at) < Date.now() - 5 * 60_000);
+    }
   }
   let providerStatus: string | null = null;
   let canResume = false;
@@ -56,9 +65,11 @@ export async function GET(request: Request) {
   }
   return NextResponse.json({ success: true, orderNumber: purchase.order_number,
     paymentStatus: purchase.payment_status, deliveryStatus, emailStatus,
+    canDownload, canRetryDownload, downloadCompleted,
     reportId: purchase.payment_status === 'succeeded' ? purchase.report_id : null,
     providerStatus, canResume, canRestart,
     amount: purchase.amount_minor === null ? null : purchase.amount_minor / 10 ** (purchase.currency_decimals || 0),
+    amountMinor: purchase.amount_minor, currencyDecimals: purchase.currency_decimals,
     currency: purchase.currency,
   }, { headers: { 'Cache-Control': 'private, no-store' } });
 }

@@ -21,20 +21,12 @@ export default async function CheckoutResultPage({
             ⏳
           </div>
           <PaymentResult order={order} returnedBack={params.returned === 'back'} />
-          {order && (
-            <p className="mt-5 text-xs text-gray-500">
-              Order reference: <span className="font-semibold text-[#4F438B]">{order}</span>
-            </p>
-          )}
           <Link
             href="/profile?tab=My%207-Day%20Report"
             className="mt-7 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#7464AC] to-[#4F438B] px-7 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
           >
             Return to My 7-Day Report
           </Link>
-          <p className="mt-4 text-[11px] text-gray-400">
-            This page does not confirm payment or unlock a report.
-          </p>
         </section>
       </main>
       <Footer />

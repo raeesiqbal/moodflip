@@ -54,11 +54,12 @@ export async function GET(request: Request, context: { params: Promise<{ reportI
   let finalized = false;
   const finish = async (success: boolean) => {
     if (finalized) return;
-    finalized = true;
-    await admin.rpc('finish_report_download', {
+    const { error } = await admin.rpc('finish_report_download', {
       p_report_id: reportId, p_user_id: user.id, p_success: success,
       p_error: success ? null : 'Download interrupted',
     });
+    if (error) throw error;
+    finalized = true;
   };
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
@@ -67,8 +68,8 @@ export async function GET(request: Request, context: { params: Promise<{ reportI
         controller.enqueue(bytes);
         return;
       }
-      controller.close();
       await finish(true);
+      controller.close();
     },
     async cancel() { await finish(false); },
   });

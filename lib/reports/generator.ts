@@ -58,7 +58,7 @@ export function generateReportPDF(data: ReportData, customerName?: string | null
       specificFeeling: entry.feeling,
       positiveMood: entry.target_mood,
       actionText: [entry.action_title, entry.action_desc].filter(Boolean).join(': '),
-      savedAt: entry.created_at,
+      savedAt: `${new Date(entry.created_at).toISOString().replace('T', ' ').slice(0, 19)} UTC`,
     })),
   }));
   const report: SevenDayReportData = {

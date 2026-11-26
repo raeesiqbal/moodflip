@@ -30,16 +30,17 @@ function loadPaymentStatus(token: string) {
 
 export default function ReportCheckout({ eligible }: { eligible: boolean }) {
   const [pricing, setPricing] = useState<CheckoutPricingResponse | null>(null);
-  const [currency, setCurrency] = useState<ReportCurrency>('AUD');
+  const [currency, setCurrency] = useState<ReportCurrency>('EUR');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [loadingPricing, setLoadingPricing] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; deliveryStatus?: string; emailStatus?: string; reportId?: string | null; providerStatus?: string | null; canResume?: boolean; canRestart?: boolean; orderNumber?: string; currency?: ReportCurrency } | null>(null);
+  const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; deliveryStatus?: string; emailStatus?: string; reportId?: string | null; canDownload?: boolean; canRetryDownload?: boolean; downloadCompleted?: boolean; amountMinor?: number | null; currencyDecimals?: number | null; providerStatus?: string | null; canResume?: boolean; canRestart?: boolean; orderNumber?: string; currency?: ReportCurrency } | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
+    if (eligible && (loadingPayment || previousPayment?.paymentStatus === 'succeeded')) return;
     let active = true;
     loadPricing()
       .then((result) => {
@@ -54,18 +55,33 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
         if (active) setLoadingPricing(false);
       });
     return () => { active = false; };
-  }, []);
+  }, [eligible, loadingPayment, previousPayment?.paymentStatus]);
 
   useEffect(() => {
     if (!eligible) return;
     let active = true;
-    void supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return;
-      const result = await loadPaymentStatus(session.access_token);
-      if (active) setPreviousPayment(result as typeof previousPayment);
-    }).catch(() => { if (active) setErrorMessage('Unable to load your purchase status. Please refresh.'); })
-      .finally(() => { if (active) setLoadingPayment(false); });
-    return () => { active = false; };
+    let timer: ReturnType<typeof setTimeout>;
+    let polls = 0;
+    const refresh = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Session unavailable');
+        const result = await loadPaymentStatus(session.access_token) as typeof previousPayment;
+        if (!active) return;
+        setPreviousPayment(result);
+        setErrorMessage('');
+        polls++;
+        if (result?.paymentStatus === 'succeeded' && !['delivered', 'bounced', 'complained'].includes(result.emailStatus || '') && polls < 12) {
+          timer = setTimeout(() => { if (!document.hidden) void refresh(); }, 10_000);
+        }
+      } catch {
+        if (active) setErrorMessage('Unable to load your purchase status. Please refresh.');
+      } finally { if (active) setLoadingPayment(false); }
+    };
+    const onVisible = () => { if (!document.hidden) { clearTimeout(timer); void refresh(); } };
+    void refresh();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { active = false; clearTimeout(timer); document.removeEventListener('visibilitychange', onVisible); };
   }, [eligible]);
 
   const selectedPrice = useMemo(
@@ -132,9 +148,12 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      setPreviousPayment((current) => current ? { ...current, deliveryStatus: 'delivered' } : current);
+      const status = await loadPaymentStatus(session.access_token) as typeof previousPayment;
+      setPreviousPayment(status);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to download your report.');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) void loadPaymentStatus(session.access_token).then((status) => setPreviousPayment(status as typeof previousPayment)).catch(() => {});
     } finally {
       setDownloading(false);
     }
@@ -142,7 +161,16 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
 
   return (
     <>
-      <div className="inline-block rounded-2xl border border-[#E4DAD7] bg-white p-6 text-left w-full max-w-sm mx-auto mb-6 shadow-2xs">
+      {previousPayment?.paymentStatus === 'succeeded' ? (
+        <div className="inline-block rounded-2xl border border-[#E4DAD7] bg-white p-6 text-left w-full max-w-sm mx-auto mb-6 shadow-2xs">
+          <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Purchase confirmed</p>
+          <p className="text-xl font-bold text-[#4F438B]">7-Day MoodFlip Report</p>
+          <p className="mt-2 text-sm text-[#5C527A]">Paid {previousPayment.amountMinor != null && previousPayment.currency && previousPayment.currencyDecimals != null
+            ? `${previousPayment.currency} ${(previousPayment.amountMinor / 10 ** previousPayment.currencyDecimals).toFixed(previousPayment.currencyDecimals)}`
+            : 'amount unavailable'}</p>
+          {previousPayment.orderNumber && <p className="mt-1 text-xs text-gray-500">Order {previousPayment.orderNumber}</p>}
+        </div>
+      ) : (!eligible || !loadingPayment) && <div className="inline-block rounded-2xl border border-[#E4DAD7] bg-white p-6 text-left w-full max-w-sm mx-auto mb-6 shadow-2xs">
         <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">
           One-time purchase
         </p>
@@ -166,37 +194,28 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
             <span className="text-green-600 font-bold">✓</span> Actionable suggestions
           </li>
         </ul>
-      </div>
+      </div>}
 
       {eligible && loadingPayment ? (
         <p role="status" className="text-sm font-semibold text-[#4F438B]">Checking your purchase status…</p>
       ) : eligible && previousPayment?.paymentStatus === 'succeeded' ? (
         <div className="text-sm font-semibold text-[#4F438B]">
-          <p className="mb-3">{previousPayment.emailStatus === 'delivered'
-            ? 'Your report e-mail has been delivered.'
-            : previousPayment.emailStatus === 'sent' ? 'Your report e-mail has been sent.'
-            : ['failed', 'bounced'].includes(previousPayment.emailStatus || '')
-              ? 'We encountered an e-mail delivery issue. Your payment remains valid. Please contact contact@moodflip.coach if your report does not arrive.'
-              : 'Your purchase confirmation and report e-mail are being prepared.'}</p>
-          {previousPayment.deliveryStatus === 'delivered' ? (
-            <p>Your report download was delivered. Your purchase remains confirmed.</p>
-          ) : previousPayment.deliveryStatus === 'failed' ? (
-            <div>
-              <p>We could not prepare your report. Your payment remains valid and you will not be charged again.</p>
-              <p className="mt-2">Please contact <a className="underline" href="mailto:contact@moodflip.coach">contact@moodflip.coach</a> for help.</p>
-              <button type="button" disabled={downloading} onClick={() => void downloadReport()} className="mt-4 rounded-full bg-[#4F438B] px-7 py-3 text-white disabled:opacity-60">Retry download</button>
-            </div>
-          ) : previousPayment.deliveryStatus === 'processing' ? (
-            <div>
-              <p>Your report is being prepared. If the download was interrupted, you can retry after a few minutes.</p>
-              <button type="button" disabled={downloading} onClick={() => void downloadReport()} className="mt-4 rounded-full bg-[#4F438B] px-7 py-3 text-white disabled:opacity-60">Retry download</button>
-            </div>
-          ) : previousPayment.reportId ? (
-            <div>
-              <p>Your payment is confirmed. Your personalised report is ready for its initial download.</p>
-              <button type="button" disabled={downloading} onClick={() => void downloadReport()} className="mt-4 rounded-full bg-[#4F438B] px-7 py-3 text-white disabled:opacity-60">{downloading ? 'Preparing report…' : 'Download report'}</button>
-            </div>
-          ) : <p>Payment confirmed. Your report is being prepared.</p>}
+          <p className="mb-3">{previousPayment.canDownload && ['sent', 'delivered'].includes(previousPayment.emailStatus || '')
+            ? 'Your MoodFlip Report is ready to download. A copy has also been emailed to you.'
+            : previousPayment.downloadCompleted
+              ? ['sent', 'delivered'].includes(previousPayment.emailStatus || '')
+                ? 'Your report download is complete. A copy has also been emailed to you.'
+                : 'Your report download is complete. Your purchase confirmation e-mail is being prepared.'
+              : previousPayment.canDownload || previousPayment.canRetryDownload
+                ? 'Your report is being prepared. If it does not arrive, you can download it from your profile or contact support.'
+                : ['failed', 'bounced', 'complained'].includes(previousPayment.emailStatus || '')
+                  ? 'Your report e-mail could not be delivered. Please contact support.'
+                : 'Your personalised report is being prepared.'}</p>
+          {(previousPayment.canDownload || previousPayment.canRetryDownload) && previousPayment.reportId && (
+            <button type="button" disabled={downloading} onClick={() => void downloadReport()} className="mt-4 rounded-full bg-[#4F438B] px-7 py-3 text-white disabled:opacity-60">
+              {downloading ? 'Preparing report…' : previousPayment.canRetryDownload ? 'Retry download' : 'Download report'}
+            </button>
+          )}
         </div>
       ) : eligible && ['pending', 'processing'].includes(previousPayment?.paymentStatus || '') ? (
         <div className="text-sm font-semibold text-[#4F438B]">

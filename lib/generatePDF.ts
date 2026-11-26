@@ -1778,7 +1778,7 @@ function generatePurchased7DayReportPDF(data: SevenDayReportData): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
     doc.setTextColor(79, 67, 139);
-    doc.text('Your 7-day report', margin, 93);
+    doc.text('7-Day MoodFlip Report', margin, 93);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10.5);
     doc.setTextColor(26, 20, 63);
@@ -1812,18 +1812,27 @@ function generatePurchased7DayReportPDF(data: SevenDayReportData): jsPDF {
 
   pageHeader();
   if (data.patternSummary) section('Your mood pattern:', data.patternSummary);
+  const liftHeight = (lift: ReportMoodLift) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const fields = [`${lift.moodFamily} / ${lift.feeling}`, lift.positiveMood,
+      ...(lift.savedAt ? [lift.savedAt] : []), lift.actionText];
+    return 17 + 18 + fields.reduce((total, value) =>
+      total + 23 + (doc.splitTextToSize(esc(value), contentWidth - 24) as string[]).length * 13, 0);
+  };
   for (const day of data.days) {
-    ensure(34);
+    const firstLift = day.moodLifts[0];
+    ensure(23 + (firstLift ? liftHeight(firstLift) : 0));
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
     doc.setTextColor(26, 20, 63);
-    doc.text(esc(day.date), margin, y);
+    doc.text(`${esc(day.date)} (UTC saved day)`, margin, y);
     doc.setFontSize(10.5);
     doc.setTextColor(116, 100, 172);
     doc.text(`Day ${day.dayNumber} of ${data.savedDayCount}`, width - margin, y, { align: 'right' });
     y += 23;
     day.moodLifts.forEach((lift, index) => {
-      ensure(32);
+      ensure(liftHeight(lift));
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10.5);
       doc.setTextColor(79, 67, 139);

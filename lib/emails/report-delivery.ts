@@ -1,7 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { generateReportPDF, parseReportData } from '@/lib/reports/generator';
 import { minorUnitsToMajor } from '@/lib/payments/pricing';
-import { generatePurchaseInvoice } from './invoice';
 
 const support = 'contact@moodflip.coach';
 const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] || char);
@@ -16,7 +15,7 @@ function receipt(purchase: Purchase, name: string | null, includeReport: boolean
   const amount = new Intl.NumberFormat('en', { style: 'currency', currency: purchase.currency }).format(Number(minorUnitsToMajor(purchase.amount_minor, purchase.currency_decimals as 0 | 2)));
   const lines = [
     `Hello ${name?.trim().split(/\s+/)[0] || 'there'},`, '',
-    includeReport ? 'Thank you for purchasing your personalised 7-Day MoodFlip Report. Your report and tax invoice are attached. Please download and save both.' : 'As requested, your purchase tax invoice is attached.',
+    includeReport ? 'Thank you for purchasing your personalised 7-Day MoodFlip Report. Your report is attached. Please download and save it.' : 'As requested, here are the details of your MoodFlip purchase.',
     '', 'Purchase details', `Business name: ${business}`, `ABN: ${abn}`,
     `Product: ${purchase.product_name}`, `Purchase date: ${new Date(purchase.paid_at).toISOString().slice(0, 10)} UTC`,
     `Amount paid: ${amount} (${purchase.currency})`, `Order reference: ${purchase.order_number}`, '',
@@ -29,7 +28,7 @@ function receipt(purchase: Purchase, name: string | null, includeReport: boolean
   return { text, html };
 }
 
-async function sendEmail(input: { to: string; subject: string; text: string; html: string; key: string; invoiceNumber: string; pdf?: Uint8Array; invoice: Uint8Array }) {
+async function sendEmail(input: { to: string; subject: string; text: string; html: string; key: string; pdf?: Uint8Array }) {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.REPORT_FROM_EMAIL || process.env.CONTACT_FROM_EMAIL;
   if (!key || !from) throw new Error('Report e-mail sender is not configured');
@@ -45,10 +44,7 @@ async function sendEmail(input: { to: string; subject: string; text: string; htm
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'Idempotency-Key': input.key },
     body: JSON.stringify({ from, to: [input.to], reply_to: support, subject: input.subject,
       text: input.text, html: input.html,
-      attachments: [
-        { filename: `MoodFlip-Invoice-${input.invoiceNumber.replace(/[^a-zA-Z0-9_-]/g, '')}.pdf`, content: encode(input.invoice) },
-        ...(input.pdf ? [{ filename: 'MoodFlip-7-Day-Report.pdf', content: encode(input.pdf) }] : []),
-      ],
+      ...(input.pdf ? { attachments: [{ filename: 'MoodFlip-7-Day-Report.pdf', content: encode(input.pdf) }] } : {}),
     }),
   });
   const result = await response.json().catch(() => null);
@@ -72,12 +68,11 @@ export async function deliverPurchasedReport(reportId: string) {
     if (!p.email || !p.order_number || p.report_id !== report.id) throw new Error('Purchase recipient or report mismatch');
     const { data: profile } = await admin.from('profiles').select('name').eq('id', report.user_id).maybeSingle();
     const pdf = generateReportPDF(parseReportData(report.report_data), profile?.name);
-    const invoice = generatePurchaseInvoice(p, process.env.BUSINESS_NAME || '', process.env.BUSINESS_ABN || '');
     const content = receipt(p, profile?.name || null, true);
     const recipient = process.env.AIRWALLEX_ENV === 'demo' ? process.env.REPORT_SANDBOX_TO_EMAIL : p.email;
     if (!recipient) throw new Error('Sandbox report recipient is not configured');
     const messageId = await sendEmail({ to: recipient, subject: `Your 7-Day MoodFlip Report - Order ${p.order_number}`,
-      ...content, key: report.email_delivery_key, invoiceNumber: p.order_number, pdf, invoice });
+      ...content, key: report.email_delivery_key, pdf });
     const { error: updateError } = await admin.from('reports').update({ email_message_id: messageId,
       email_sent_at: new Date().toISOString(), email_status: 'sent', email_last_error: null })
       .eq('id', reportId).eq('email_status', 'sending');
@@ -133,7 +128,6 @@ export async function resendPurchaseReceipt(adminUserId: string, purchaseId: str
     ? await admin.from('profiles').select('name').eq('id', purchase.user_id).maybeSingle()
     : { data: null };
   const content = receipt(purchase, profile?.name || null, false);
-  const invoice = generatePurchaseInvoice(purchase, process.env.BUSINESS_NAME || '', process.env.BUSINESS_ABN || '');
   return sendEmail({ to: recipient, subject: `Your MoodFlip Purchase Receipt - Order ${purchase.order_number}`,
-    ...content, key: `receipt-resend-${purchaseId}-${requestId}`, invoiceNumber: purchase.order_number, invoice });
+    ...content, key: `receipt-resend-${purchaseId}-${requestId}` });
 }
