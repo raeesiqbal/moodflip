@@ -81,8 +81,17 @@ const CATEGORIES = [
 ];
 
 export default function MoodsIndexPage() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Mood guides for everyday feelings',
+    description: metadata.description,
+    url: 'https://moodflip.coach/moods',
+    isPartOf: { '@type': 'WebSite', name: 'MoodFlip', url: 'https://moodflip.coach' },
+  };
   return (
     <div className="min-h-screen bg-[#FDF8F5] text-[#1A143F] font-sans antialiased flex flex-col justify-between selection:bg-[#F4EBF5] selection:text-[#7464AC]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <Header />
 
       <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full space-y-6">
@@ -96,7 +105,7 @@ export default function MoodsIndexPage() {
           />
           <div className="relative z-10 space-y-2">
             <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#4F438B] tracking-tight">
-              Mood Guides for Everyday Feelings
+              Mood guides for everyday feelings
             </h1>
             <p className="text-sm sm:text-base text-[#5C527A] max-w-2xl mx-auto leading-relaxed">
               Choose a guide that fits what is happening for you. Each offers a practical reflection, an everyday example and a possible next step. You do not need a perfect label, and you can leave any suggestion that does not suit your situation.
@@ -115,7 +124,7 @@ export default function MoodsIndexPage() {
                 <h2 className="text-lg font-bold text-[#4F438B] font-serif">
                   {cat.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-[#7464AC]/80">
+                <p className="text-sm text-[#7464AC]/80">
                   {cat.description}
                 </p>
               </div>
@@ -125,7 +134,7 @@ export default function MoodsIndexPage() {
                   <Link
                     key={g.slug}
                     href={`/moods/${g.slug}`}
-                    className="inline-flex items-center px-3.5 py-1.5 rounded-full border border-[#D6CEE8] bg-[#F8F3FA] text-[#4F438B] text-xs sm:text-sm font-semibold hover:border-[#7464AC] hover:bg-[#EEE0FC] hover:shadow-xs transition"
+                    className="inline-flex items-center px-3.5 py-1.5 rounded-full border border-[#D6CEE8] bg-[#F8F3FA] text-[#4F438B] text-sm font-semibold hover:border-[#7464AC] hover:bg-[#EEE0FC] hover:shadow-xs transition"
                   >
                     {g.name}
                   </Link>
@@ -138,7 +147,7 @@ export default function MoodsIndexPage() {
         {/* Medical & Crisis Safety Disclaimer */}
         <div className="rounded-xl border border-[#E4DAD7]/70 bg-[#FAF7FD] p-4 text-xs text-[#7464AC] leading-relaxed">
           <p>
-            <strong>Note:</strong> MoodFlip offers general self-help prompts. It is not therapy or medical advice. If difficult feelings persist or affect daily life, seek professional support. If you cannot keep yourself safe, seek urgent help through local services.
+            MoodFlip offers general self-help prompts. It is not therapy or medical advice. If difficult feelings persist or affect daily life, seek professional support. If you cannot keep yourself safe, seek urgent help through local services.
           </p>
         </div>
 

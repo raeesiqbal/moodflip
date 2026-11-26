@@ -12,10 +12,13 @@ export interface MoodPageData {
   exampleText: string;
   safetyTitle?: string;
   safetyText?: string;
+  toolSectionTitle?: string;
+  toolSectionText?: string;
   toolDirection: string;
   toolLink: string;
   relatedGuides: { name: string; slug: string }[];
   furtherReading?: string;
+  furtherReadingUrl?: string;
 }
 
 export const MOOD_PAGES: Record<string, MoodPageData> = {
@@ -54,7 +57,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-hopeless"
       }
     ],
-    "furtherReading": "NHS low mood guidance"
+    "furtherReading": "NHS low mood guidance",
+    "furtherReadingUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/low-mood-sadness-depression/"
   },
   "feeling-anxious": {
     "slug": "feeling-anxious",
@@ -91,7 +95,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-overwhelmed"
       }
     ],
-    "furtherReading": "NHS guidance on worries"
+    "furtherReading": "NHS guidance on worries",
+    "furtherReadingUrl": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/tackling-your-worries/"
   },
   "feeling-angry": {
     "slug": "feeling-angry",
@@ -284,20 +289,19 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
     "metaDesc": "Feeling hopeless? Focus on immediate support and a manageable next step. Learn the limits of a mood exercise and when to reach for more help.",
     "heading": "Feeling Hopeless? How to Ask for Support",
     "intro": [
-      "When you are feeling hopeless, make the next step about support rather than solving your whole future. Tell someone clearly that you are having a difficult time and need company or help. If you might hurt yourself or cannot keep yourself safe, seek urgent help through local emergency services or an urgent mental health service now.",
-      "Make the next step about support"
+      "When you are feeling hopeless, make the next step about support rather than solving your whole future. Tell someone clearly that you are having a difficult time and need company or help. If you might hurt yourself or cannot keep yourself safe, seek urgent help through local emergency services or an urgent mental health service now."
     ],
-    "exerciseTitle": "Narrow the task to the next few minutes rather than the whole future.",
+    "exerciseTitle": "Make the next step about support",
     "exerciseSteps": [
+      "Narrow the task to the next few minutes rather than the whole future.",
       "Think of someone who can listen or help you arrange support.",
-      "Use direct wording: \u201cI am having a very difficult time and need someone to talk with.\u201d You do not need to give a polished explanation.",
-      "An everyday example"
+      "Use direct wording: \u201cI am having a very difficult time and need someone to talk with.\u201d You do not need to give a polished explanation."
     ],
-    "exampleTitle": "After several setbacks, you might conclude that nothing you do matters. A next step could be asking someone to sit with you while you arrange an appointment or deal with one urgent practical issue. The purpose is to reduce what you are carrying alone, not to prove that your feelings are wrong.",
-    "exampleText": "Beyond this moment",
-    "safetyTitle": "Persistent hopelessness deserves professional support. Contact a health professional even if you are unsure how to describe what is happening. You can show them a written note or this page as a starting point.",
-    "safetyText": "If you are safe and want a brief reflection prompt, you can try MoodFlip. It cannot assess risk, diagnose a condition or replace support from another person.",
-    "toolDirection": "",
+    "exampleTitle": "An everyday example",
+    "exampleText": "After several setbacks, you might conclude that nothing you do matters. A next step could be asking someone to sit with you while you arrange an appointment or deal with one urgent practical issue. The purpose is to reduce what you are carrying alone, not to prove that your feelings are wrong.",
+    "safetyTitle": "Beyond this moment",
+    "safetyText": "Persistent hopelessness deserves professional support. Contact a health professional even if you are unsure how to describe what is happening. You can show them a written note or this page as a starting point.",
+    "toolDirection": "If you are safe and want a brief reflection prompt, you can try MoodFlip. It cannot assess risk, diagnose a condition or replace support from another person.",
     "toolLink": "/#hero-section",
     "relatedGuides": [
       {
@@ -313,7 +317,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-empty"
       }
     ],
-    "furtherReading": "Healthdirect mental health resources"
+    "furtherReading": "Healthdirect mental health resources",
+    "furtherReadingUrl": "https://www.healthdirect.gov.au/healthcare-and-services/mental-health/mental-health-resources"
   },
   "feeling-frustrated": {
     "slug": "feeling-frustrated",
@@ -535,7 +540,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-sad"
       }
     ],
-    "furtherReading": "Cleveland Clinic emotional numbness information"
+    "furtherReading": "Cleveland Clinic emotional numbness information",
+    "furtherReadingUrl": "https://health.clevelandclinic.org/why-you-feel-emotionally-numb"
   },
   "feeling-irritated": {
     "slug": "feeling-irritated",
@@ -720,7 +726,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-nervous"
       }
     ],
-    "furtherReading": "NHS guidance on unhelpful thoughts"
+    "furtherReading": "NHS guidance on unhelpful thoughts",
+    "furtherReadingUrl": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/reframing-unhelpful-thoughts/"
   },
   "feeling-nervous": {
     "slug": "feeling-nervous",
@@ -868,7 +875,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-anxious"
       }
     ],
-    "furtherReading": "NHS sudden confusion guidance"
+    "furtherReading": "NHS sudden confusion guidance",
+    "furtherReadingUrl": "https://www.nhs.uk/symptoms/confusion/"
   },
   "feeling-empty": {
     "slug": "feeling-empty",
@@ -905,7 +913,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-hopeless"
       }
     ],
-    "furtherReading": "Healthdirect mental health information"
+    "furtherReading": "Healthdirect mental health information",
+    "furtherReadingUrl": "https://www.healthdirect.gov.au/symptoms/signs-of-mental-health-issues"
   },
   "feeling-tired": {
     "slug": "feeling-tired",
@@ -942,7 +951,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-stressed"
       }
     ],
-    "furtherReading": "Healthdirect fatigue information"
+    "furtherReading": "Healthdirect fatigue information",
+    "furtherReadingUrl": "https://www.healthdirect.gov.au/symptoms/fatigue"
   },
   "feeling-exhausted": {
     "slug": "feeling-exhausted",
@@ -979,7 +989,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
         "slug": "feeling-overwhelmed"
       }
     ],
-    "furtherReading": "Healthdirect fatigue information"
+    "furtherReading": "Healthdirect fatigue information",
+    "furtherReadingUrl": "https://www.healthdirect.gov.au/symptoms/fatigue"
   },
   "flip-your-mood": {
     "slug": "flip-your-mood",
@@ -998,8 +1009,8 @@ export const MOOD_PAGES: Record<string, MoodPageData> = {
     ],
     "exampleTitle": "An everyday example",
     "exampleText": "You feel frustrated after trying unsuccessfully to arrange an appointment. You could write down the times you are available and prepare one clear message asking about alternatives. You might remain annoyed, but you have chosen a response that moves the task forward.",
-    "safetyTitle": "",
-    "safetyText": "",
+    "toolSectionTitle": "Use MoodFlip as a prompt",
+    "toolSectionText": "Open the tool, select a mood family and the available feeling that fits, then press Lift My Mood. Read the suggested action and decide whether it is appropriate. You can adapt it or leave it. You are not required to complete an unsuitable exercise.",
     "toolDirection": "Try MoodFlip when you want help choosing a small next step. If difficult feelings persist or affect your daily life, seek support beyond a brief online tool.",
     "toolLink": "/#hero-section",
     "relatedGuides": [

@@ -9,8 +9,8 @@ export default function LandscapeEnforcer() {
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
 
-  // Landscape orientation is enforced strictly on the MoodFlip interactive tool pages
-  const isToolPage = pathname === '/' || pathname?.startsWith('/moods');
+  // Only the homepage contains the landscape-only interactive tool.
+  const isToolPage = pathname === '/';
 
   useEffect(() => {
     setMounted(true);

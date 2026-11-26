@@ -48,7 +48,7 @@ export default async function MoodPage({
     mainEntityOfPage: `https://moodflip.coach/moods/${slug}`,
     author: {
       '@type': 'Organization',
-      name: 'MoodFlip Editorial Team',
+      name: 'MoodFlip',
       url: 'https://moodflip.coach',
     },
     publisher: {
@@ -59,15 +59,13 @@ export default async function MoodPage({
         url: 'https://moodflip.coach/moodflip-logo.png',
       },
     },
-    datePublished: '2026-10-25T00:00:00Z',
-    dateModified: '2026-10-25T00:00:00Z',
   };
 
   return (
     <div className="min-h-screen bg-[#FDF8F5] text-[#1A143F] font-sans antialiased flex flex-col justify-between selection:bg-[#F4EBF5] selection:text-[#7464AC]">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <Header />
 
@@ -90,9 +88,6 @@ export default async function MoodPage({
             <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#4F438B] tracking-tight leading-snug">
               {page.heading}
             </h1>
-            <p className="text-xs text-[#7464AC] font-medium">
-              Editorial Guide · Updated October 2026 · 3 min read
-            </p>
           </header>
 
           {/* Intro Paragraphs */}
@@ -107,7 +102,7 @@ export default async function MoodPage({
             <h2 className="text-base sm:text-lg font-bold text-[#4F438B] font-serif">
               {page.exerciseTitle}
             </h2>
-            <ol className="list-decimal pl-5 space-y-2 text-xs sm:text-sm text-[#1A143F] leading-relaxed font-medium">
+            <ol className="list-decimal pl-5 space-y-2 text-sm sm:text-base text-[#1A143F] leading-relaxed font-medium">
               {page.exerciseSteps.map((step, idx) => (
                 <li key={idx}>{step}</li>
               ))}
@@ -120,7 +115,7 @@ export default async function MoodPage({
               <h2 className="text-base sm:text-lg font-bold text-[#4F438B] font-serif">
                 {page.exampleTitle}
               </h2>
-              <p className="text-xs sm:text-sm text-[#5C527A] leading-relaxed">
+              <p className="text-sm sm:text-base text-[#5C527A] leading-relaxed">
                 {page.exampleText}
               </p>
             </section>
@@ -128,11 +123,20 @@ export default async function MoodPage({
 
           {/* Safety / When a small step is not enough */}
           {page.safetyText && (
-            <section className="rounded-2xl border border-amber-200/70 bg-amber-50/50 p-5 sm:p-6 space-y-2 text-xs sm:text-sm text-[#5C527A] leading-relaxed">
+            <section className="rounded-2xl border border-amber-200/70 bg-amber-50/50 p-5 sm:p-6 space-y-2 text-sm sm:text-base text-[#5C527A] leading-relaxed">
               <h2 className="text-base sm:text-lg font-bold text-[#4F438B] font-serif">
                 {page.safetyTitle}
               </h2>
               <p>{page.safetyText}</p>
+            </section>
+          )}
+
+          {page.toolSectionTitle && page.toolSectionText && (
+            <section className="space-y-2 text-sm sm:text-base leading-relaxed">
+              <h2 className="text-base sm:text-lg font-bold text-[#4F438B] font-serif">
+                {page.toolSectionTitle}
+              </h2>
+              <p>{page.toolSectionText}</p>
             </section>
           )}
 
@@ -146,7 +150,7 @@ export default async function MoodPage({
                 href={page.toolLink}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#7464AC] to-[#4F438B] text-white font-extrabold text-sm sm:text-base shadow-md shadow-[#4F438B]/20 hover:scale-[1.02] hover:opacity-95 transition-all"
               >
-                Lift My Mood →
+                Lift My Mood
               </a>
             </div>
           </section>
@@ -172,16 +176,16 @@ export default async function MoodPage({
           )}
 
           {/* Further Reading Citation (if present) */}
-          {page.furtherReading && (
+          {page.furtherReading && page.furtherReadingUrl && (
             <p className="text-xs text-[#7464AC] italic">
-              Further reading: {page.furtherReading}
+              Further reading: <a href={page.furtherReadingUrl} className="underline hover:text-[#4F438B]">{page.furtherReading}</a>
             </p>
           )}
 
           {/* Standard Medical & Crisis Disclaimer */}
           <footer className="pt-4 border-t border-[#E4DAD7]/70 text-xs text-[#7464AC] leading-relaxed">
             <p>
-              MoodFlip offers general self-help prompts. It is not therapy or medical advice. If difficult feelings persist or affect daily life, seek professional support. If you cannot keep yourself safe, seek urgent help through local services.
+              MoodFlip offers general self-help prompts. It is not therapy or medical advice.
             </p>
           </footer>
 
