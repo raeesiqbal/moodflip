@@ -101,7 +101,15 @@ export async function resendPurchasedReport(adminUserId: string, reportId: strin
   const admin = getSupabaseAdmin();
   const { data: report, error } = await admin.from('reports')
     .select('email_status,email_message_id,email_delivery_key').eq('id', reportId).single();
-  if (error || !report || !['failed', 'bounced'].includes(report.email_status)) throw new Error('Report is not eligible for delivery recovery');
+  if (error || !report || !['failed', 'bounced'].includes(report.email_status)) {
+    throw new Error('Report is not eligible for delivery recovery');
+  }
+  const { data: purchase, error: purchaseError } = await admin.from('purchases')
+    .select('paid_at').eq('report_id', reportId).eq('payment_status', 'succeeded')
+    .order('paid_at', { ascending: false }).limit(1);
+  if (purchaseError || !purchase?.[0]?.paid_at || Date.parse(purchase[0].paid_at) < Date.now() - 30 * 24 * 60 * 60_000) {
+    throw new Error('Report attachment recovery window has ended');
+  }
   const recoveryKey = `report-recovery-${reportId}-${recoveryId}`;
   if (report.email_delivery_key !== recoveryKey) {
     const { error: updateError } = await admin.from('reports').update({

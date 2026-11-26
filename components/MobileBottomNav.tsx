@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import { isCurrentUserAdmin } from '@/lib/admin/client';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
@@ -11,6 +12,16 @@ export default function MobileBottomNav() {
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    let active = true;
+    void isCurrentUserAdmin(user.id).then((allowed) => {
+      if (active) setIsAdmin(allowed);
+    });
+    return () => { active = false; };
+  }, [user?.id]);
 
   const handleLogout = async () => {
     await signOut();
@@ -211,14 +222,14 @@ export default function MobileBottomNav() {
                 <span className="text-lg">🔒</span>
                 <span>Privacy Policy</span>
               </Link>
-              <Link
+              {isAdmin && <Link
                 href="/admin"
                 onClick={() => setDrawerOpen(false)}
                 className="flex items-center gap-3 p-3 rounded-xl text-[#1A143F] font-bold text-sm hover:bg-[#F4EBF5] hover:text-[#7464AC] transition"
               >
                 <span className="text-lg">⚙️</span>
                 <span>Admin Dashboard</span>
-              </Link>
+              </Link>}
             </div>
 
             <div className="pt-3 border-t border-[#E4DAD7] flex gap-3">

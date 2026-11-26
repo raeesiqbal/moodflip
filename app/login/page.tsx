@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { notify } from '@/lib/toast';
 import { useAuth } from '@/components/AuthProvider';
+import { isCurrentUserAdmin } from '@/lib/admin/client';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,9 +20,12 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      router.replace(user.app_metadata?.role === 'admin' ? '/admin' : '/profile');
-    }
+    if (authLoading || !user) return;
+    let active = true;
+    void isCurrentUserAdmin(user.id).then((isAdmin) => {
+      if (active) router.replace(isAdmin ? '/admin' : '/profile');
+    });
+    return () => { active = false; };
   }, [authLoading, router, user]);
 
   const [email, setEmail] = useState('');
@@ -77,13 +81,12 @@ export default function LoginPage() {
       if (sessionError) throw sessionError;
 
       setLoadingStep(3);
-      const role = data.user?.app_metadata?.role || (email.trim().toLowerCase() === 'admin@moodflip.coach' ? 'admin' : 'user');
       const params = new URLSearchParams(window.location.search);
       const requestedRedirect = params.get('redirect');
       const safeRedirect = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
         ? requestedRedirect
         : '/profile';
-      const redirectUrl = role === 'admin' ? '/admin' : safeRedirect;
+      const redirectUrl = data.isAdmin === true ? '/admin' : safeRedirect.startsWith('/admin') ? '/profile' : safeRedirect;
       notify.success('Sign-in successful. Redirecting…', { title: 'Welcome back' });
       window.setTimeout(() => { window.location.href = redirectUrl; }, 350);
     } catch (err: any) {

@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import { notify } from '@/lib/toast';
 import AuthPasswordFields from '@/components/AuthPasswordFields';
 import { useAuth } from '@/components/AuthProvider';
+import { isCurrentUserAdmin } from '@/lib/admin/client';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -19,9 +20,12 @@ export default function RegisterPage() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      router.replace(user.app_metadata?.role === 'admin' ? '/admin' : '/profile');
-    }
+    if (authLoading || !user) return;
+    let active = true;
+    void isCurrentUserAdmin(user.id).then((isAdmin) => {
+      if (active) router.replace(isAdmin ? '/admin' : '/profile');
+    });
+    return () => { active = false; };
   }, [authLoading, router, user]);
 
   const [fullName, setFullName] = useState('');

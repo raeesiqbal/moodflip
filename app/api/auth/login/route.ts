@@ -24,10 +24,13 @@ export async function POST(req: Request) {
       });
 
       if (!error && data?.user?.email_confirmed_at) {
+        const { data: profile } = await supabaseAdmin.from('profiles')
+          .select('is_admin').eq('id', data.user.id).maybeSingle();
         return NextResponse.json({
           success: true,
           user: data.user,
           session: data.session,
+          isAdmin: profile?.is_admin === true,
         });
       }
       if (error?.code === 'email_not_confirmed') {
