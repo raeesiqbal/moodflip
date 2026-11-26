@@ -75,19 +75,16 @@ export async function GET(request: Request) {
     }
 
     const { admin, user } = authenticated;
-    const { data, error } = await admin
-      .from('checkins')
-      .select('id,mood,feeling,target_mood,action_title,action_desc,saved_at,created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (error) throw error;
     const today = new Date().toISOString().slice(0, 10);
-    const { data: progress, error: progressError } = await admin.rpc('get_mood_lift_progress', {
-      p_user_id: user.id,
-      p_saved_at: today,
-    });
+    const [{ data, error }, { data: progress, error: progressError }] = await Promise.all([
+      admin.from('checkins')
+        .select('id,mood,feeling,target_mood,action_title,action_desc,saved_at,created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(100),
+      admin.rpc('get_mood_lift_progress', { p_user_id: user.id, p_saved_at: today }),
+    ]);
+    if (error) throw error;
     if (progressError) throw progressError;
     if (!progress) throw new Error('Report progress was not returned.');
 

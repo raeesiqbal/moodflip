@@ -29,6 +29,7 @@ function configuredSdkEnvironment(): AirwallexSdkEnvironment | null {
 }
 
 async function getPayments(environment: AirwallexSdkEnvironment) {
+  const sdkEnvironment = environment === 'sandbox' ? 'demo' : 'prod';
   const configured = configuredSdkEnvironment();
   // The authenticated server response is authoritative and is passed
   // explicitly to init(), so the SDK can never silently use its production
@@ -43,7 +44,7 @@ async function getPayments(environment: AirwallexSdkEnvironment) {
     initializedEnvironment = environment;
     paymentsPromise = import('@airwallex/components-sdk').then(async ({ init }) => {
       const initialized = await init({
-        env: environment,
+        env: sdkEnvironment,
         enabledElements: ['payments'],
       });
       if (!initialized.payments) throw new Error('Airwallex payments failed to initialize.');
@@ -56,13 +57,12 @@ async function getPayments(environment: AirwallexSdkEnvironment) {
 export async function redirectToAirwallex(params: RedirectParams): Promise<void> {
   const payments = await getPayments(params.environment);
   const redirectUrl = payments.redirectToCheckout({
-    env: params.environment,
+    env: params.environment === 'sandbox' ? 'demo' : 'prod',
     mode: 'payment',
     intent_id: params.intentId,
     client_secret: params.clientSecret,
     currency: params.currency,
     successUrl: params.successUrl,
-    cancelUrl: params.cancelUrl,
     ...(params.countryCode ? { country_code: params.countryCode } : {}),
     autoCapture: true,
     autoSaveCardForFuturePayments: false,

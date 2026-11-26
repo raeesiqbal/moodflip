@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { notify } from "@/lib/toast";
+import { invalidateUserActivity } from "@/lib/user-activity-client";
 import styles from "./HeroSectionExact.module.css";
 import { COUNSELOR_MOODS, CounselorPromptItem } from "@/data/moods";
 import AdBanner from "@/components/AdBanner";
@@ -856,6 +857,7 @@ export default function HeroSectionExact({
       if (!response.ok || !result.success || !result.checkin || !result.reportProgress) {
         throw new Error(result.error || "Your Mood Lift could not be saved. Please try again.");
       }
+      invalidateUserActivity();
 
       // Cache only a database-confirmed record. This keeps reports available
       // offline without claiming that an unsuccessful server request was saved.

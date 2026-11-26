@@ -47,7 +47,7 @@ export function generateReportPDF(data: ReportData, customerName?: string | null
   const snapshot = parseReportData(data);
   const moodCounts = new Map<string, number>();
   for (const entry of snapshot.entries) moodCounts.set(entry.mood, (moodCounts.get(entry.mood) || 0) + 1);
-  const mostFrequent = [...moodCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+  const mostFrequent = Array.from(moodCounts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
   const days: ReportDayGroup[] = snapshot.qualifyingDates.map((date, index) => ({
     date,
     dayNumber: index + 1,

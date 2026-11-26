@@ -10,11 +10,15 @@ async function verify(body: string, request: Request) {
   if (!secret?.startsWith('whsec_') || !id || !timestamp || !signature) return false;
   const seconds = Number(timestamp);
   if (!Number.isFinite(seconds) || Math.abs(Date.now() / 1000 - seconds) > 300) return false;
-  let keyBytes: Uint8Array;
-  try { keyBytes = Uint8Array.from(atob(secret.slice(6)), (char) => char.charCodeAt(0)); } catch { return false; }
+  let keyBytes: Uint8Array<ArrayBuffer>;
+  try {
+    const decoded = atob(secret.slice(6));
+    keyBytes = new Uint8Array(new ArrayBuffer(decoded.length));
+    for (let i = 0; i < decoded.length; i++) keyBytes[i] = decoded.charCodeAt(i);
+  } catch { return false; }
   const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const digest = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${id}.${timestamp}.${body}`)));
-  const expected = btoa(String.fromCharCode(...digest));
+  const expected = btoa(String.fromCharCode.apply(null, Array.from(digest)));
   return signature.split(' ').some((part) => {
     const actual = part.startsWith('v1,') ? part.slice(3) : '';
     if (actual.length !== expected.length) return false;

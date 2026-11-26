@@ -10,6 +10,7 @@ import { notify } from '@/lib/toast';
 import { useAuth } from '@/components/AuthProvider';
 import AuthPasswordFields from '@/components/AuthPasswordFields';
 import ReportCheckout from '@/components/ReportCheckout';
+import { getUserActivity, invalidateUserActivity } from '@/lib/user-activity-client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,14 @@ export default function ProfilePage() {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
+    if (authLoading) return;
+    if (verifiedUser) {
+      setIsLoggedIn(true);
+      setUserEmail(verifiedUser.email || '');
+      setUserName(String(verifiedUser.user_metadata?.full_name || verifiedUser.email?.split('@')[0] || 'Member'));
+      setMounted(true);
+      return;
+    }
     let active = true;
 
     const checkUser = async () => {
@@ -111,7 +120,7 @@ export default function ProfilePage() {
       active = false;
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [authLoading, verifiedUser]);
 
   useEffect(() => {
     if (!authLoading && !verifiedUser) {
@@ -207,7 +216,11 @@ function ProfileContent({
   onLogout: () => void;
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>('My Mood Lifts');
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (typeof window === 'undefined') return 'My Mood Lifts';
+    const requested = new URLSearchParams(window.location.search).get('tab');
+    return requested && TABS.includes(requested as Tab) ? requested as Tab : 'My Mood Lifts';
+  });
   const [userEmail, setUserEmail] = useState(initialEmail);
   const [flipsCount, setFlipsCount] = useState(0);
 
@@ -345,11 +358,8 @@ function MyMoodFlipsTab({ onCountChange }: { onCountChange: (count: number) => v
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('Your session has expired. Please sign in again.');
 
-        const response = await fetch('/api/user/activity', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        const result = await response.json();
-        if (!response.ok || !result.success || !Array.isArray(result.checkins)) {
+        const result = await getUserActivity(session.access_token);
+        if (!Array.isArray(result.checkins)) {
           throw new Error(result.error || 'Unable to load saved Mood Lifts.');
         }
 
@@ -396,6 +406,7 @@ function MyMoodFlipsTab({ onCountChange }: { onCountChange: (count: number) => v
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Unable to delete Mood Lift.');
       }
+      invalidateUserActivity();
 
       const updated = flips.filter((flip) => flip.id !== id);
       setFlips(updated);
@@ -562,11 +573,8 @@ function My7DayReportTab() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('Your session has expired. Please sign in again.');
 
-        const response = await fetch('/api/user/activity', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        const result = await response.json();
-        if (!response.ok || !result.success || !result.reportProgress) {
+        const result = await getUserActivity(session.access_token);
+        if (!result.reportProgress) {
           throw new Error(result.error || 'Unable to load your report progress.');
         }
 
@@ -662,7 +670,7 @@ function My7DayReportTab() {
           patterns, and personalised actionable suggestions.
         </p>
 
-        {!loading && !errorMessage && <ReportCheckout eligible={Boolean(progress?.eligible)} />}
+        {!errorMessage && <div className={loading ? 'hidden' : undefined}><ReportCheckout eligible={Boolean(progress?.eligible)} /></div>}
         <p className="mt-4 text-xs text-gray-400">
           Progress is based on saved UTC calendar days. Up to three Mood Lifts may be saved per day.
         </p>

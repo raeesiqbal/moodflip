@@ -10,6 +10,24 @@ import type {
 } from '@/lib/payments/types';
 import type { ReportCurrency } from '@/lib/payments/pricing';
 
+let pricingRequest: Promise<CheckoutPricingResponse> | null = null;
+let statusRequest: { token: string; promise: Promise<unknown> } | null = null;
+function loadPricing() {
+  if (!pricingRequest) pricingRequest = fetch('/api/payments/pricing', { cache: 'no-store' })
+    .then((response) => { if (!response.ok) throw new Error('Unable to load report pricing.'); return response.json() as Promise<CheckoutPricingResponse>; })
+    .catch((error) => { pricingRequest = null; throw error; });
+  return pricingRequest;
+}
+function loadPaymentStatus(token: string) {
+  if (statusRequest?.token === token) return statusRequest.promise;
+  const promise = fetch('/api/payments/status', {
+    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+  }).then((response) => { if (!response.ok) throw new Error('Unable to load payment status.'); return response.json(); })
+    .finally(() => { if (statusRequest?.promise === promise) statusRequest = null; });
+  statusRequest = { token, promise };
+  return promise;
+}
+
 export default function ReportCheckout({ eligible }: { eligible: boolean }) {
   const [pricing, setPricing] = useState<CheckoutPricingResponse | null>(null);
   const [currency, setCurrency] = useState<ReportCurrency>('EUR');
@@ -18,15 +36,12 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [previousPayment, setPreviousPayment] = useState<{ paymentStatus: string; deliveryStatus?: string; emailStatus?: string; reportId?: string | null; providerStatus?: string | null; canResume?: boolean; canRestart?: boolean; orderNumber?: string; currency?: ReportCurrency } | null>(null);
+  const [loadingPayment, setLoadingPayment] = useState(true);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     let active = true;
-    fetch('/api/payments/pricing', { cache: 'no-store' })
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Unable to load report pricing.');
-        return response.json() as Promise<CheckoutPricingResponse>;
-      })
+    loadPricing()
       .then((result) => {
         if (!active) return;
         setPricing(result);
@@ -46,12 +61,10 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
     let active = true;
     void supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
-      const response = await fetch('/api/payments/status', { headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store' });
-      if (response.ok) {
-        const result = await response.json();
-        if (active) setPreviousPayment(result);
-      }
-    }).catch(() => {});
+      const result = await loadPaymentStatus(session.access_token);
+      if (active) setPreviousPayment(result as typeof previousPayment);
+    }).catch(() => { if (active) setErrorMessage('Unable to load your purchase status. Please refresh.'); })
+      .finally(() => { if (active) setLoadingPayment(false); });
     return () => { active = false; };
   }, [eligible]);
 
@@ -155,7 +168,9 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
         </ul>
       </div>
 
-      {eligible && previousPayment?.paymentStatus === 'succeeded' ? (
+      {eligible && loadingPayment ? (
+        <p role="status" className="text-sm font-semibold text-[#4F438B]">Checking your purchase status…</p>
+      ) : eligible && previousPayment?.paymentStatus === 'succeeded' ? (
         <div className="text-sm font-semibold text-[#4F438B]">
           <p className="mb-3">{previousPayment.emailStatus === 'delivered'
             ? 'Your report e-mail has been delivered.'

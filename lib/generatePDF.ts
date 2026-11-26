@@ -1822,7 +1822,7 @@ function generatePurchased7DayReportPDF(data: SevenDayReportData): jsPDF {
     doc.setTextColor(116, 100, 172);
     doc.text(`Day ${day.dayNumber} of ${data.savedDayCount}`, width - margin, y, { align: 'right' });
     y += 23;
-    for (const [index, lift] of day.moodLifts.entries()) {
+    day.moodLifts.forEach((lift, index) => {
       ensure(32);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10.5);
@@ -1837,9 +1837,9 @@ function generatePurchased7DayReportPDF(data: SevenDayReportData): jsPDF {
       doc.setDrawColor(228, 218, 215);
       doc.line(margin, y, width - margin, y);
       y += 18;
-    }
+    });
   }
-  const pages = doc.internal.getNumberOfPages();
+  const pages = doc.getNumberOfPages();
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page);
     doc.setFont('helvetica', 'normal');
