@@ -5,8 +5,8 @@ export default defineConfig({
     name: "moodflip",
     entrypoint: "./cloudflare-worker.ts",
     triggers: [
-      triggers.scheduled({ schedule: "*/5 * * * *" }),
       triggers.scheduled({ schedule: "0 3 * * *" }),
+      triggers.scheduled({ schedule: "*/5 * * * *" }),
     ],
     compatibilityDate: "2026-11-21",
     assets: {
@@ -30,6 +30,7 @@ export default defineConfig({
       ),
 
       CONTACT_FROM_EMAIL: bindings.text("MoodFlip <no-reply@moodflip.coach>"),
+      CONTACT_TO_EMAIL: bindings.text("contact@moodflip.coach"),
       TURNSTILE_EXPECTED_HOSTNAMES: bindings.text(
         "moodflip.coach,www.moodflip.coach",
       ),
