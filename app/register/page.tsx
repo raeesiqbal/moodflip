@@ -10,6 +10,7 @@ import { notify } from '@/lib/toast';
 import AuthPasswordFields from '@/components/AuthPasswordFields';
 import { useAuth } from '@/components/AuthProvider';
 import { isCurrentUserAdmin } from '@/lib/admin/client';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -79,6 +80,7 @@ export default function RegisterPage() {
         notify.error(data.error || 'Unable to create your account. Please try again.');
         return;
       }
+      trackAnalyticsEvent('sign_up');
       window.sessionStorage.setItem('mf_pending_verification_email', email.trim());
       window.sessionStorage.setItem('mf_verification_context', 'registration');
       notify.success('We sent a verification link to your email.', {

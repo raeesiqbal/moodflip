@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const order = new URL(request.url).searchParams.get('order');
   if (order && order.length > 64) return NextResponse.json({ error: 'Valid order required' }, { status: 400 });
   let query = admin.from('purchases')
-    .select('order_number,payment_status,amount_minor,currency,currency_decimals,report_id,airwallex_payment_intent_id,payment_environment')
+    .select('order_number,payment_status,amount_minor,currency,currency_decimals,product_name,report_id,airwallex_payment_intent_id,payment_environment')
     .eq('user_id', user.id).eq('report_type', '7_day').order('created_at', { ascending: false });
   if (order) query = query.eq('order_number', order);
   const { data: purchases, error } = await query.limit(order ? 1 : 100);
@@ -71,5 +71,7 @@ export async function GET(request: Request) {
     amount: purchase.amount_minor === null ? null : purchase.amount_minor / 10 ** (purchase.currency_decimals || 0),
     amountMinor: purchase.amount_minor, currencyDecimals: purchase.currency_decimals,
     currency: purchase.currency,
+    productName: purchase.payment_status === 'succeeded' ? purchase.product_name : null,
+    paymentEnvironment: purchase.payment_status === 'succeeded' ? purchase.payment_environment : null,
   }, { headers: { 'Cache-Control': 'private, no-store' } });
 }

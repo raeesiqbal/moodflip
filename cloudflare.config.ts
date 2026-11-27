@@ -25,6 +25,9 @@ export default defineConfig({
       ),
       NEXT_PUBLIC_SITE_URL: bindings.text("https://moodflip.coach"),
       NEXT_PUBLIC_AIRWALLEX_ENV: bindings.text("demo"),
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: bindings.text("G-WNF04STFYD"),
+      // Enable only after GA4 automatic measurements and privacy settings are reviewed.
+      NEXT_PUBLIC_GA_ENABLED: bindings.text("false"),
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: bindings.text(
         "0x4AAAAAAGOmjC1-nGxOcdek",
       ),

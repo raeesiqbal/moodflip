@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { notify } from '@/lib/toast';
 import { useAuth } from '@/components/AuthProvider';
 import { isCurrentUserAdmin } from '@/lib/admin/client';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -79,6 +80,7 @@ export default function LoginPage() {
         refresh_token: data.session.refresh_token,
       });
       if (sessionError) throw sessionError;
+      trackAnalyticsEvent('login');
 
       setLoadingStep(3);
       const params = new URLSearchParams(window.location.search);

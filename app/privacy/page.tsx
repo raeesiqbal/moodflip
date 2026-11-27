@@ -138,6 +138,14 @@ export default function PrivacyPage() {
             </div>
           </section>
 
+          <section className="space-y-1 pb-1">
+            <h2 className="text-base sm:text-lg font-bold text-[#4F438B]">10. Optional analytics</h2>
+            <div className="space-y-1 text-xs sm:text-sm text-[#1A143F] leading-relaxed pl-1">
+              <p>With your permission, MoodFlip uses Google Analytics to measure broad website visits and actions such as account registration, sign-in, use of the free tool and purchases. MoodFlip does not intentionally send your selected moods, feelings, profile details or report contents to Google Analytics.</p>
+              <p>Analytics is optional. Choose “Essential only” to use the site without it, or change your choice using “Analytics choices” in the footer. Individual mood guide visits are not measured so the guides you read are not disclosed through page tracking.</p>
+            </div>
+          </section>
+
           <p className="text-xs italic text-[#7464AC] pt-2 border-t border-[#E4DAD7]/60">
             Last updated: 27 November 2026
           </p>

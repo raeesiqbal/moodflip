@@ -9,6 +9,7 @@ import type {
   CheckoutSuccessResponse,
 } from '@/lib/payments/types';
 import type { ReportCurrency } from '@/lib/payments/pricing';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 
 let pricingRequest: Promise<CheckoutPricingResponse> | null = null;
 let statusRequest: { token: string; promise: Promise<unknown> } | null = null;
@@ -109,6 +110,8 @@ export default function ReportCheckout({ eligible }: { eligible: boolean }) {
       if (!response.ok || !('success' in result) || result.success !== true) {
         throw new Error('error' in result ? result.error : 'Unable to prepare payment checkout.');
       }
+
+      if (result.sdkEnvironment === 'prod') trackAnalyticsEvent('begin_checkout');
 
       await redirectToAirwallex({
         intentId: result.intentId,

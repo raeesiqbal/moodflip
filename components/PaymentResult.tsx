@@ -2,13 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { ANALYTICS_CONSENT_EVENT, trackVerifiedPurchase } from '@/lib/analytics';
 
-type Status = { paymentStatus: string; providerStatus: string | null; canResume: boolean; canRestart: boolean; deliveryStatus: string; emailStatus: string; canDownload: boolean; canRetryDownload: boolean; downloadCompleted: boolean; amountMinor: number | null; currencyDecimals: number | null; currency: string | null; orderNumber: string };
+type Status = { paymentStatus: string; providerStatus: string | null; canResume: boolean; canRestart: boolean; deliveryStatus: string; emailStatus: string; canDownload: boolean; canRetryDownload: boolean; downloadCompleted: boolean; amountMinor: number | null; currencyDecimals: number | null; currency: string | null; orderNumber: string; productName: string | null; paymentEnvironment: string | null };
 
 export default function PaymentResult({ order, returnedBack }: { order: string | null; returnedBack: boolean }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState('');
   const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (status?.paymentStatus !== 'succeeded' || !order || status.orderNumber !== order) return;
+    const record = () => trackVerifiedPurchase({
+      orderNumber: status.orderNumber, amountMinor: status.amountMinor,
+      currencyDecimals: status.currencyDecimals, currency: status.currency,
+      productName: status.productName, paymentEnvironment: status.paymentEnvironment,
+    });
+    record();
+    window.addEventListener(ANALYTICS_CONSENT_EVENT, record);
+    return () => window.removeEventListener(ANALYTICS_CONSENT_EVENT, record);
+  }, [order, status]);
 
   useEffect(() => {
     if (!order) return;

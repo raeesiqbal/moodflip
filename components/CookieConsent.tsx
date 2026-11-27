@@ -1,134 +1,66 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ANALYTICS_CONSENT_EVENT, ANALYTICS_CONSENT_KEY, analyticsAvailable } from '@/lib/analytics';
 
 export default function CookieConsent() {
-  const [showBanner, setShowBanner] = useState(false);
-  const [settings, setSettings] = useState({
-    enabled: false, // Default is OFF
-    bannerTitle: 'We Value Your Privacy & Cookies',
-    bannerText: 'MoodFlip uses essential cookies and analytics to enhance your self-reflection experience and show personalized wellness insights.',
-    privacyLink: '/privacy',
-    acceptButtonText: '✓ Accept All Cookies',
-    essentialButtonText: 'Essential Only',
-  });
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const loadCookieSettings = () => {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('moodflip_cookie_settings');
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            setSettings((prev) => ({ ...prev, ...parsed }));
-            return parsed;
-          } catch (e) {}
-        }
-        const flag = localStorage.getItem('moodflip_cookie_consent_enabled');
-        if (flag !== null) {
-          const isEn = flag === 'true';
-          setSettings((prev) => ({ ...prev, enabled: isEn }));
-          return { enabled: isEn };
-        }
-      }
-      return { enabled: false }; // Default is OFF
+    if (!analyticsAvailable()) return;
+    const refresh = () => {
+      try { setVisible(window.localStorage.getItem(ANALYTICS_CONSENT_KEY) === null); }
+      catch { setVisible(false); }
     };
-
-    const current = loadCookieSettings();
-
-    const handleStorage = () => {
-      const updated = loadCookieSettings();
-      if (!updated.enabled) {
-        setShowBanner(false);
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-
-    if (!current || !current.enabled) {
-      setShowBanner(false);
-      return () => {
-        window.removeEventListener('storage', handleStorage);
-      };
-    }
-
-    // Check both localStorage and document.cookie
-    const localConsent = localStorage.getItem('moodflip_cookie_consent');
-    const hasCookie = typeof document !== 'undefined' && document.cookie.split('; ').some((row) => row.startsWith('moodflip_cookie_consent='));
-
-    if (!localConsent && !hasCookie) {
-      const timer = setTimeout(() => {
-        setShowBanner(true);
-      }, 1000);
-      return () => {
-        window.removeEventListener('storage', handleStorage);
-        clearTimeout(timer);
-      };
-    }
-
+    const reopen = () => setVisible(true);
+    refresh();
+    window.addEventListener('moodflip:open-analytics-choices', reopen);
+    window.addEventListener('storage', refresh);
     return () => {
-      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('moodflip:open-analytics-choices', reopen);
+      window.removeEventListener('storage', refresh);
     };
   }, []);
 
-  const saveConsent = (value: string) => {
+  const choose = (accepted: boolean) => {
+    let previouslyAccepted = false;
     try {
-      localStorage.setItem('moodflip_cookie_consent', value);
-    } catch (e) {
-      console.warn('LocalStorage unavailable:', e);
+      previouslyAccepted = window.localStorage.getItem(ANALYTICS_CONSENT_KEY) === 'accepted';
+      window.localStorage.setItem(ANALYTICS_CONSENT_KEY, accepted ? 'accepted' : 'essential_only');
+    } catch { setVisible(false); return; }
+    window.dispatchEvent(new Event(ANALYTICS_CONSENT_EVENT));
+    setVisible(false);
+    if (previouslyAccepted && !accepted) {
+      window.gtag?.('consent', 'update', {
+        analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+      });
+      for (const cookie of document.cookie.split(';')) {
+        const name = cookie.trim().split('=')[0];
+        if (name === '_ga' || name.startsWith('_ga_')) {
+          document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax`;
+          document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.moodflip.coach; SameSite=Lax`;
+        }
+      }
+      window.location.reload();
     }
-
-    const maxAge = 365 * 24 * 60 * 60; // 1 year in seconds
-    if (typeof document !== 'undefined') {
-      document.cookie = `moodflip_cookie_consent=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
-    }
-
-    setShowBanner(false);
   };
 
-  if (!settings.enabled || !showBanner) return null;
-
+  if (!visible) return null;
   return (
-    <div
-      className="fixed bottom-20 left-3 right-3 sm:left-6 sm:bottom-6 sm:right-auto sm:max-w-md bg-[#FEF9F5]/95 backdrop-blur-2xl border border-[#E4DAD7] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-[0_10px_35px_rgba(0,0,0,0.18)] z-50 animate-in slide-in-from-bottom-4 duration-300 text-[#1A1338]"
-      style={{ bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))' }}
-    >
-      <div className="flex items-start gap-3">
-        <span className="text-2xl sm:text-3xl shrink-0">🍪</span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#1A1338]">
-              {settings.bannerTitle || 'We Value Your Privacy & Cookies'}
-            </h4>
-            <button
-              onClick={() => saveConsent('essential_only')}
-              className="sm:hidden text-gray-400 hover:text-gray-600 text-xs font-bold p-1 cursor-pointer"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-          <p className="text-[11px] sm:text-xs text-[#5B5278] font-medium leading-relaxed mb-3 sm:mb-4">
-            {settings.bannerText || 'MoodFlip uses essential cookies and analytics to enhance your self-reflection experience and show personalized wellness insights.'}{' '}
-            <Link href={settings.privacyLink || '/privacy'} className="text-[#7464AC] font-extrabold underline">
-              Terms &amp; Privacy Policy
-            </Link>
-          </p>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <button
-              onClick={() => saveConsent('accepted')}
-              className="w-full sm:flex-1 bg-gradient-to-r from-[#7464AC] to-[#9C8CC4] text-white py-2.5 px-4 rounded-xl text-xs font-extrabold shadow-md hover:scale-[1.01] transition cursor-pointer active:scale-95 text-center"
-            >
-              {settings.acceptButtonText || '✓ Accept All Cookies'}
-            </button>
-            <button
-              onClick={() => saveConsent('essential_only')}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#E4DAD7] text-[#5B5278] hover:bg-[#FEF9F5] text-xs font-bold transition cursor-pointer text-center"
-            >
-              {settings.essentialButtonText || 'Essential Only'}
-            </button>
-          </div>
-        </div>
+    <div role="dialog" aria-label="Analytics choices"
+      className="fixed bottom-20 left-3 right-3 z-50 rounded-2xl border border-[#E4DAD7] bg-[#FEF9F5] p-4 text-[#1A1338] shadow-[0_10px_35px_rgba(0,0,0,0.18)] sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md sm:p-5">
+      <h2 className="font-serif text-base font-bold">Analytics choices</h2>
+      <p className="mt-2 text-xs leading-relaxed text-[#5B5278]">
+        With your permission, MoodFlip uses Google Analytics to measure broad site visits and actions.
+        We do not send your selected moods, feelings, personal details or report contents.
+        You can change this choice later. Read our <Link href="/privacy" className="underline">Terms &amp; Privacy Policy</Link>.
+      </p>
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <button type="button" onClick={() => choose(true)}
+          className="rounded-xl bg-[#7464AC] px-5 py-2.5 text-xs font-bold text-white">Allow analytics</button>
+        <button type="button" onClick={() => choose(false)}
+          className="rounded-xl border border-[#E4DAD7] px-5 py-2.5 text-xs font-bold text-[#5B5278]">Essential only</button>
       </div>
     </div>
   );

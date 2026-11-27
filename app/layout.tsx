@@ -8,6 +8,7 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import LandscapeEnforcer from '@/components/LandscapeEnforcer';
 import ToastProvider from '@/components/ToastProvider';
 import { AuthProvider } from '@/components/AuthProvider';
+import AnalyticsProvider from '@/components/AnalyticsProvider';
 
 export const metadata: Metadata = {
   title: 'MoodFlip | Self-Help Tool',
@@ -65,14 +66,6 @@ export default function RootLayout({
         `}} />
 
 
-        {/* ── #34: Google Analytics 4 ── Connected with Joy's official GA4 Measurement ID */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-W982KSL9X8"></script>
-        <script dangerouslySetInnerHTML={{__html: `
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-W982KSL9X8', { anonymize_ip: true });
-        `}} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -94,6 +87,7 @@ export default function RootLayout({
           {children}
           <PWAInstallPrompt />
           <CookieConsent />
+          <Suspense fallback={null}><AnalyticsProvider /></Suspense>
           <MobileBottomNav />
           <LandscapeEnforcer />
         </AuthProvider>
