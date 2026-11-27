@@ -35,3 +35,4 @@ export default {
     if (!deliveryResponse.ok) throw new Error(`Report delivery returned HTTP ${deliveryResponse.status}.`);
   },
 };
+ 
